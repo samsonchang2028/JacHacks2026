@@ -6,3 +6,9 @@ cache/
 out/drafts/
 .DS_Store
 .jac/
+# agent tooling scratch, not project source
+.agents/
+.codex/
+.impeccable/
+skills-lock.json
+node_modules/
