@@ -1,0 +1,53 @@
+credit_budget: 300          # hard stop; fail loudly
+
+apis:
+  socrata:
+    base: https://data.sfgov.org/resource
+    # Socrata's newer "API Key" auth (basic auth with a key id/secret pair)
+    # is what's actually in .env; SOCRATA_APP_TOKEN (legacy X-App-Token
+    # header) is supported too if that's what a given deployment expects.
+    api_key_id_env: SOCRATA_API_ID
+    api_key_secret_env: SOCRATA_API_KEY
+    app_token_env: SOCRATA_APP_TOKEN
+    # Dataset IDs are resolved at runtime against the Socrata discovery
+    # catalog (api.us.socrata.com/api/catalog/v1) — do not trust anything
+    # hardcoded here. This list is the set of *topics* we need, not IDs.
+    needed:
+      - 311_cases
+      - supervisor_districts
+      - analysis_neighborhoods
+      - election_precinct_results     # turns the Prop K divergence empirical
+  legistar:
+    note: >
+      Granicus Web API. Verified live (2026-07-26): client identifier is
+      "sfgov" (webapi.legistar.com/v1/sfgov/*) — "sanfrancisco" 500s.
+      fetch/legistar.py re-probes at runtime rather than trusting this note.
+      DATA IS STALE: newest matter in the API is Sept 2020 — SF stopped
+      syncing it. Historical records (1999-2020) only; useless for current
+      matters (Portsmouth Square renovation, Prop K both post-date it).
+  # open311: removed. GeoReport v2 is vendor-run (spotmobile.net) and every
+  # jurisdiction_id 404s without a provisioned API key we don't have. The
+  # same 311 data is in Socrata (fetch/socrata.py), no key needed.
+  ceqanet:
+    note: >
+      State CEQA clearinghouse, for environmental notices. Stretch — add only
+      if Task 4 (procedure extraction) is done early.
+  sf_ethics:
+    note: >
+      Disclosure rules that apply if the ad component ever goes live.
+      Schema-only / reference for now, not fetched.
+
+firecrawl_targets:
+  procedure:
+    - sfrecpark.org           # commission agendas, comment instructions
+    - sfgov.legistar.com      # agendas if the API is short on detail
+    - sfplanning.org          # notices
+    - sfbos.org               # Board of Supervisors + individual district offices (D3)
+  news:
+    - missionlocal.org
+    - sfstandard.com
+    - sfexaminer.com
+    - richmondsunsetnews.com
+  in_language:
+    - windnewspaper.com
+    - singtaousa.com          # Sing Tao Daily (US edition)

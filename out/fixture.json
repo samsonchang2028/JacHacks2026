@@ -1,0 +1,356 @@
+{
+  "projects": [
+    {
+      "name": "Portsmouth Square Improvement Project",
+      "category": "renovation",
+      "location": "Portsmouth Square, Chinatown, San Francisco",
+      "description": "~$73M renovation; pedestrian bridge over Kearny St removed to make room for a larger two-story clubhouse. Park closed for roughly two years from June 2026.",
+      "timeline": "groundbreaking June 2026",
+      "source_url": "",
+      "fetched_at": "",
+      "geo_zones": ["Chinatown", "District 3"],
+      "decision_bodies": ["SF Recreation and Park Department", "District 3 Supervisor's Office"]
+    },
+    {
+      "name": "Proposition K (Upper Great Highway closure)",
+      "category": "road_closure",
+      "location": "Upper Great Highway, Lincoln Way to Sloat Blvd",
+      "description": "Nov 5 2024 ballot measure permanently closing the Upper Great Highway to private cars. Passed citywide 54.73%. Lost ~60-40 in the Sunset and ~70-30 in the Richmond; Districts 1/4/7/11 combined ~61% no.",
+      "timeline": "passed Nov 2024",
+      "source_url": "",
+      "fetched_at": "",
+      "geo_zones": ["Sunset", "Richmond"],
+      "decision_bodies": ["San Francisco citywide electorate"]
+    }
+  ],
+  "geo_zones": [
+    { "name": "Chinatown", "kind": "neighborhood", "population_est": 0, "notes": "" },
+    { "name": "District 3", "kind": "district", "population_est": 0, "notes": "" },
+    { "name": "Sunset", "kind": "neighborhood", "population_est": 0, "notes": "" },
+    { "name": "Richmond", "kind": "neighborhood", "population_est": 0, "notes": "" },
+    { "name": "San Francisco (citywide electorate)", "kind": "citywide", "population_est": 0, "notes": "" }
+  ],
+  "decision_bodies": [
+    {
+      "name": "SF Recreation and Park Department",
+      "kind": "commission",
+      "jurisdiction": "citywide agency",
+      "accountable_to": ["San Francisco (citywide electorate)"]
+    },
+    {
+      "name": "District 3 Supervisor's Office",
+      "kind": "supervisor",
+      "jurisdiction": "District 3",
+      "accountable_to": ["District 3"]
+    },
+    {
+      "name": "San Francisco citywide electorate",
+      "kind": "electorate",
+      "jurisdiction": "citywide",
+      "accountable_to": ["San Francisco (citywide electorate)"]
+    },
+    {
+      "name": "SF Planning Department",
+      "kind": "department",
+      "jurisdiction": "citywide agency",
+      "accountable_to": ["San Francisco (citywide electorate)"]
+    }
+  ],
+  "comment_channels": [
+    {
+      "recipient": "Planning Department",
+      "method": "email",
+      "format_note": "reference agenda item number",
+      "languages": "English, 繁體中文, Español, Filipino, Tiếng Việt",
+      "source_url": "https://sfplanning.org/public-hearings",
+      "deadlines": [
+        { "kind": "comment", "date": "unknown", "threshold": "",
+          "source_url": "https://sfplanning.org/public-hearings" }
+      ]
+    },
+    {
+      "recipient": "Julie Moore, EIR Coordinator, San Francisco Planning Department",
+      "method": "email",
+      "format_note": "Public comments concerning the scope of the EIR should be addressed to the specified recipient.",
+      "languages": "English,繁體中文,Español,Filipino,Tiếng Việt",
+      "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project",
+      "deadlines": [
+        { "kind": "comment", "date": "2021-07-09", "threshold": "",
+          "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project" }
+      ]
+    },
+    {
+      "recipient": "Elizabeth White, EIR Coordinator, San Francisco Planning Department",
+      "method": "email",
+      "format_note": "Public comments concerning the scope of the EIR should be directed to the recipient.",
+      "languages": "Spanish, Cantonese, Filipino",
+      "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element",
+      "deadlines": [
+        { "kind": "comment", "date": "2021-07-16", "threshold": "",
+          "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element" }
+      ]
+    }
+  ],
+  "organizations": [
+    {
+      "name": "Chinese Consolidated Benevolent Association",
+      "community": "Chinatown family associations",
+      "language": "zh",
+      "contact": "info@chssc.org",
+      "inside_process": false,
+      "serves": ["Chinatown"],
+      "notes": "resolved from https://chssc.org/chinese-consolidated-benevolent-association/"
+    },
+    {
+      "name": "Merchants United Association of San Francisco",
+      "community": "Chinatown / Sunset / Ocean Ave merchants",
+      "language": "zh",
+      "contact": "",
+      "inside_process": false,
+      "serves": ["Chinatown"],
+      "notes": "checked https://chinatownmerchantssf.org/ and 1 contact page(s), no org-level contact found"
+    },
+    {
+      "name": "SF Chamber of Commerce",
+      "community": "San Francisco business community",
+      "language": "en",
+      "contact": "info@sfchamber.com, 415.392.4520",
+      "inside_process": false,
+      "serves": ["San Francisco (citywide electorate)"],
+      "notes": "resolved from https://sfchamber.com/contact-us"
+    },
+    {
+      "name": "Community Youth Center",
+      "community": "Chinatown youth and families",
+      "language": "zh",
+      "contact": "hello@cycsf.org, (415) 775-1345",
+      "inside_process": false,
+      "serves": ["Chinatown"],
+      "notes": "resolved from https://www.cycsf.org/contact"
+    },
+    {
+      "name": "Chinatown Community Development Center",
+      "community": "Chinatown residents",
+      "language": "en",
+      "contact": "info@chinatowncdc.org",
+      "inside_process": true,
+      "serves": ["Chinatown"],
+      "notes": "resolved from https://www.chinatowncdc.org/about-us/contact-us"
+    },
+    {
+      "name": "Richmond Neighborhood Center",
+      "community": "Richmond residents",
+      "language": "en",
+      "contact": "",
+      "inside_process": false,
+      "serves": ["Richmond"],
+      "notes": "checked https://richmondsf.org/ and 2 contact page(s), no org-level contact found"
+    },
+    {
+      "name": "Geary Merchants Association",
+      "community": "Richmond merchants",
+      "language": "en",
+      "contact": "",
+      "inside_process": false,
+      "serves": ["Richmond"],
+      "notes": "checked https://www.gearyblvd.org/ and 2 contact page(s), no org-level contact found"
+    },
+    {
+      "name": "Lowell High School PTSA",
+      "community": "Sunset families",
+      "language": "en",
+      "contact": "LowellPTSA101@gmail.com",
+      "inside_process": false,
+      "serves": ["Sunset"],
+      "notes": "resolved from http://www.lowellptsa.org/contact-us.html; org-level PTSA contact only, no parent records"
+    },
+    {
+      "name": "Sunset churches",
+      "community": "Sunset residents",
+      "language": "en",
+      "contact": "",
+      "inside_process": false,
+      "serves": ["Sunset"],
+      "notes": "config/orgs.yaml flags this as needing resolution to a specific congregation before scraping; generic search (sunset.life) found no org-level contact, as expected pre-resolution"
+    }
+  ],
+  "testimony": [
+    {
+      "speaker": "CCBA board member (5 decades)",
+      "affiliation": "CCBA",
+      "claim": "Bridge let seniors and children cross Kearny safely; removal harms community access. Never heard the plan from city officials.",
+      "language": "zh",
+      "kind": "testimony",
+      "source_url": ""
+    },
+    {
+      "speaker": "Merchants association president",
+      "affiliation": "Merchants United",
+      "claim": "Three simultaneous Chinatown construction projects compound harm to merchants.",
+      "language": "zh",
+      "kind": "testimony",
+      "source_url": ""
+    },
+    {
+      "speaker": "District 3 Supervisor",
+      "affiliation": "D3 Supervisor's Office",
+      "claim": "Office received no communication supporting keeping the bridge.",
+      "language": "en",
+      "kind": "counterargument",
+      "source_url": ""
+    },
+    {
+      "speaker": "Opposition organizer",
+      "affiliation": "No on K campaign",
+      "claim": "Organized opposition never went east of West Portal; most of the city only heard 'a park'.",
+      "language": "en",
+      "kind": "evidence",
+      "source_url": ""
+    },
+    {
+      "speaker": "Chinese Cultural Foundation",
+      "affiliation": "Chinese Cultural Foundation",
+      "claim": "The Portsmouth Square Bridge is about Chinatown's history and culture and should not be removed.",
+      "language": "en",
+      "kind": "testimony",
+      "source_url": "https://www.windnewspaper.com/article/the-community-opposes-the-removal-of-a-historic-pedestrian-bridge-with-good-feng-shui-for-renovating-portsmouth-square"
+    },
+    {
+      "speaker": "Architect",
+      "affiliation": "Architect",
+      "claim": "The City has never shown an alternative design keeping the Bridge although the EIR clearly mentioned it.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.windnewspaper.com/article/the-community-opposes-the-removal-of-a-historic-pedestrian-bridge-with-good-feng-shui-for-renovating-portsmouth-square"
+    },
+    {
+      "speaker": "Construction Firm Owner",
+      "affiliation": "Construction Firm Owner",
+      "claim": "If the Portsmouth Square Bridge is removed, the economy in Chinatown is expected to worsen.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.windnewspaper.com/article/the-community-opposes-the-removal-of-a-historic-pedestrian-bridge-with-good-feng-shui-for-renovating-portsmouth-square"
+    },
+    {
+      "speaker": "CCBA Board Member",
+      "affiliation": "CCBA",
+      "claim": "The bridge provides a huge open space; the City's claim that removal will create more open spaces doesn't make sense.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.windnewspaper.com/article/the-community-opposes-the-removal-of-a-historic-pedestrian-bridge-with-good-feng-shui-for-renovating-portsmouth-square"
+    },
+    {
+      "speaker": "Kite Shop Owner",
+      "affiliation": "Chinatown merchant",
+      "claim": "The bridge should not be removed; it is crucial for the community's health and safety.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.windnewspaper.com/article/the-community-opposes-the-removal-of-a-historic-pedestrian-bridge-with-good-feng-shui-for-renovating-portsmouth-square"
+    },
+    {
+      "speaker": "Local Historian",
+      "affiliation": "",
+      "claim": "The bridge represented the financial and civic power that Chinese Americans achieved after World War II despite systemic racism.",
+      "language": "en",
+      "kind": "testimony",
+      "source_url": "https://www.youtube.com/watch?v=gmbc4GC1Fng"
+    },
+    {
+      "speaker": "Local Activists",
+      "affiliation": "",
+      "claim": "Using public money for the bridge was a misallocation of resources that should have gone towards essential housing for residents.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.youtube.com/watch?v=gmbc4GC1Fng"
+    },
+    {
+      "speaker": "Plaintiff",
+      "affiliation": "Prop K CEQA lawsuit",
+      "claim": "We feel very confident in our arguments and believe the judge is misreading them.",
+      "language": "en",
+      "kind": "testimony",
+      "source_url": "https://richmondsunsetnews.com/2026/02/08/effort-underway-to-send-ugh-compromise-back-to-voters/"
+    },
+    {
+      "speaker": "Campaign Consultant",
+      "affiliation": "Prop K campaign",
+      "claim": "The way Prop. K was presented was misleading and did not reflect the realities of working-class people who need the highway.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://richmondsunsetnews.com/2026/02/08/effort-underway-to-send-ugh-compromise-back-to-voters/"
+    },
+    {
+      "speaker": "Former SFPD Commander",
+      "affiliation": "",
+      "claim": "The organized opposition never informed a large part of the city about the true impacts of Prop. K's closure.",
+      "language": "en",
+      "kind": "counterargument",
+      "source_url": "https://richmondsunsetnews.com/2026/02/08/effort-underway-to-send-ugh-compromise-back-to-voters/"
+    },
+    {
+      "speaker": "Board of Supervisors President",
+      "affiliation": "Board of Supervisors",
+      "claim": "This measure is divisive and an 'unfunded mandate.'",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.sfpublicpress.org/proposition-k-authorize-great-highway-to-become-car-free-possibly-a-park/"
+    },
+    {
+      "speaker": "Board of Supervisors member",
+      "affiliation": "Board of Supervisors",
+      "claim": "Closing the Upper Great Highway could leave the city's Chinese American community feeling isolated.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.sfpublicpress.org/proposition-k-authorize-great-highway-to-become-car-free-possibly-a-park/"
+    },
+    {
+      "speaker": "Board of Supervisors member",
+      "affiliation": "Board of Supervisors",
+      "claim": "Proposition K is a 'once-in-a-century opportunity' to transform the road into an iconic oceanside park that could bring the Sunset to life.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.sfpublicpress.org/proposition-k-authorize-great-highway-to-become-car-free-possibly-a-park/"
+    },
+    {
+      "speaker": "Neighborhood Group",
+      "affiliation": "Coalition for San Francisco Neighborhoods",
+      "claim": "Permanently closing the Upper Great Highway to vehicles could worsen traffic and divert it into residential areas, as well as lengthen commutes.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.sfpublicpress.org/proposition-k-authorize-great-highway-to-become-car-free-possibly-a-park/"
+    },
+    {
+      "speaker": "Merchants Association",
+      "affiliation": "Great Highway-area merchants",
+      "claim": "These inconveniences would discourage long-time customers from continuing to patronize them.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.sfpublicpress.org/proposition-k-authorize-great-highway-to-become-car-free-possibly-a-park/"
+    },
+    {
+      "speaker": "San Francisco Controller's Office",
+      "affiliation": "City Government",
+      "claim": "Maintaining private vehicle access costs the city $350,000 to $700,000 per year for sand removal.",
+      "language": "en",
+      "kind": "evidence",
+      "source_url": "https://www.spur.org/voter-guide/2024-11/sf-prop-k-upper-great-highway"
+    },
+    {
+      "speaker": "SPUR",
+      "affiliation": "SPUR",
+      "claim": "Prop. K would help fulfill goals of increasing access to shared public amenities and addressing sea level rise.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.spur.org/voter-guide/2024-11/sf-prop-k-upper-great-highway"
+    },
+    {
+      "speaker": "Trust for Public Land",
+      "affiliation": "Non-profit Organization",
+      "claim": "Low-income neighborhoods would benefit from enhanced access to open space if Prop. K passes.",
+      "language": "en",
+      "kind": "argument",
+      "source_url": "https://www.spur.org/voter-guide/2024-11/sf-prop-k-upper-great-highway"
+    }
+  ],
+  "incidents": []
+}

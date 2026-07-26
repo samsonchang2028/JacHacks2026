@@ -1,0 +1,64 @@
+# ============================================================
+# orgs.yaml — outreach targets (§4 of p1ingestion.md).
+#
+# `inside_process` is set by hand here, never by the model — it's
+# the judgment call that carries Portsmouth Square's whole argument
+# (CCBA and the merchants association were excluded; CCDC was inside).
+#
+# `case: prop-k-great-highway` orgs deliberately have no aligned
+# eastside intermediaries (see "The eastside problem" in
+# p1ingestion.md §4) — org outreach is expected to resolve to
+# westside-only orgs for that case. That's the honest finding, not
+# a gap in the scrape.
+# ============================================================
+- name: Chinese Consolidated Benevolent Association
+  case: portsmouth-square
+  serves: [Chinatown]
+  language: zh
+  inside_process: false
+- name: Merchants United Association of San Francisco
+  case: portsmouth-square
+  serves: [Chinatown]
+  language: zh
+  inside_process: false
+  note: named "Chinatown Merchants Association" in the original spec draft;
+    aligned here to the actual org (Ed Siu, 150+ merchants) already curated
+    in seed_signal.jac to avoid a duplicate near-identical entity.
+- name: SF Chamber of Commerce
+  case: portsmouth-square
+  serves: [San Francisco (citywide electorate)]
+  language: en
+  inside_process: false
+- name: Community Youth Center
+  case: portsmouth-square
+  serves: [Chinatown]
+  language: zh
+  inside_process: false
+- name: Chinatown Community Development Center
+  case: portsmouth-square
+  serves: [Chinatown]
+  language: en
+  inside_process: true
+
+- name: Richmond Neighborhood Center
+  case: prop-k-great-highway
+  serves: [Richmond]
+  language: en
+  inside_process: false
+- name: Geary Merchants Association
+  case: prop-k-great-highway
+  serves: [Richmond]
+  language: en
+  inside_process: false
+- name: Lowell High School PTSA
+  case: prop-k-great-highway
+  serves: [Sunset]
+  language: en
+  inside_process: false
+  note: org-level contact only, no parent records
+- name: Sunset churches
+  case: prop-k-great-highway
+  serves: [Sunset]
+  language: en
+  inside_process: false
+  note: resolve to specific congregations before scraping
