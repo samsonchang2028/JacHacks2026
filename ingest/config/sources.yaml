@@ -32,6 +32,26 @@ apis:
   # open311: removed. GeoReport v2 is vendor-run (spotmobile.net) and every
   # jurisdiction_id 404s without a provisioned API key we don't have. The
   # same 311 data is in Socrata (fetch/socrata.py), no key needed.
+  legistar_portal:
+    note: >
+      Live scraper for sfgov.legistar.com (fetch/legistar_portal.py) — the
+      CURRENT source of SF legislation, filling the frozen Web API's gap.
+      Plain WebForms postbacks; the basic search box is Telerik-ajax-only,
+      so the module uses the advanced form (verified returning 2026
+      legislation for both case studies). Free, no auth.
+    bodies_of_interest:       # calendar filter defaults, per the plan
+      - Board of Supervisors
+      - Land Use and Transportation Committee
+      - Recreation and Park Commission
+  reddit:
+    note: >
+      Via Apify actor trudax/reddit-scraper-lite (fetch/reddit.py) — the
+      plan's trudax/reddit-scraper moved to a paid-rental model; lite is the
+      same maintainer's pay-per-event variant, identical input schema.
+      Token env: APIFY_API_TOKEN or APIFY_API_KEY. Costs real credits per
+      uncached run (~$3.40/1k results); cache-first is mandatory. Usernames
+      are scrubbed to "resident commenter" before caching. Forum posts are
+      Incident-adjacent context, not Testimony.
   ceqanet:
     note: >
       State CEQA clearinghouse, for environmental notices. Stretch — add only

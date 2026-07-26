@@ -59,9 +59,30 @@ set -a && source .env && set +a
 ### Structured APIs (free, no Firecrawl credits)
 
 ```bash
-python -m ingest.fetch.socrata --smoke     # 311 cases in a Chinatown bbox
-python -m ingest.fetch.legistar --smoke    # SF legislative matters (historical only — see below)
+python -m ingest.fetch.socrata --smoke          # 311 cases in a Chinatown bbox
+python -m ingest.fetch.legistar --smoke         # SF legislative matters (historical only — see below)
+python -m ingest.fetch.legistar_portal --smoke  # CURRENT legislation + meeting calendar (live scrape)
+python -m ingest.fetch.legistar_portal --search "Great Highway"   # ad-hoc title search
 ```
+
+`legistar_portal` scrapes the live sfgov.legistar.com portal (plain
+ASP.NET-WebForms postbacks, no auth, no credits) and is the current-data
+counterpart to the frozen `legistar` Web API — verified returning 2026
+legislation for both case studies plus the upcoming-meetings calendar.
+
+### Reddit (via Apify — spends real credits on uncached runs)
+
+```bash
+python -m ingest.fetch.reddit --smoke      # one small live run (10 items, ~a cent)
+```
+
+Reddit closed self-service API registration (Nov 2025) and its public
+`.json` endpoints (May 2026), so this rides Apify's `reddit-scraper-lite`
+actor per `PLAN_reddit_and_legistar.md` — a scraping path, not an API path,
+which sits against Reddit's user agreement; stated plainly here per the
+plan's disclosure note. Usernames are scrubbed to `"resident commenter"`
+before anything is cached; posts are Incident-adjacent context, never
+Testimony. Needs `APIFY_API_TOKEN` (or `APIFY_API_KEY`) in `.env`.
 
 Two structured sources were investigated and cut, with the findings kept in
 the code rather than silently dropped:
