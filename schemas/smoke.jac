@@ -21,8 +21,11 @@ with entry {
 
     failures = 0;
 
-    for anchor in [root --> (`?CaseAnchor)] {
-        for proj in [anchor --> (`?Project)] {
+    # NOTE: node-type-filter syntax `(`Type)` crashes jaclang 0.16.7's
+    # codegen for archetypes with 2+ required fields (see walkers.jac).
+    # isinstance() over an untyped traversal is the verified equivalent.
+    for anchor in [n for n in [root -->] if isinstance(n, CaseAnchor)] {
+        for proj in [n for n in [anchor -->] if isinstance(n, Project)] {
             print("=== " + proj.name + " ===");
 
             if proj.category not in CATEGORIES {

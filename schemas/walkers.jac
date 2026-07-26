@@ -19,7 +19,7 @@ include schema;
 walker DivergenceCheck {
     has impact_zones: list = [];
     has decision_zones: list = [];
-    has diverged: bool = false;
+    has diverged: bool = False;
     has message: str = "";
 
     can run with Project entry {
@@ -123,11 +123,16 @@ walker PrecedentMatcher {
 
     can start with Project entry {
         self.category = here.category;
-        visit [root --> (`?ActionAnchor)];
+        # NOTE: `[root --> (`ActionAnchor)]` node-type-filter syntax crashes
+        # jaclang 0.16.7's codegen for archetypes with 2+ required fields
+        # (it evaluates the filter type as a zero-arg constructor call
+        # instead of a bare isinstance() target). isinstance() over an
+        # untyped traversal is the verified-working equivalent.
+        visit [n for n in [root -->] if isinstance(n, ActionAnchor)];
     }
 
     can scan with ActionAnchor entry {
-        for pc in [here --> (`?PrecedentCase)] {
+        for pc in [n for n in [here -->] if isinstance(n, PrecedentCase)] {
             score = 0.0;
             if pc.category == self.category { score += 0.6; }
             if "San Francisco" in pc.location { score += 0.3; }

@@ -66,8 +66,8 @@ node Incident {
 # ------------------------------------------------------------
 node Testimony {
     has speaker: str;
-    has affiliation: str = "";
     has claim: str;
+    has affiliation: str = "";
     has language: str = "en";
     has kind: str = "testimony";    # testimony | argument | evidence | counterargument
     has source_url: str = "";
@@ -89,7 +89,7 @@ node Organization {
     has community: str = "";
     has language: str = "en";
     has contact: str = "";
-    has inside_process: bool = false;   # was it in the official consultation?
+    has inside_process: bool = False;   # was it in the official consultation?
 }
 
 
@@ -101,16 +101,16 @@ node Organization {
 node CommentChannel {
     has recipient: str;
     has method: str;                # email | web_form | in_person | mail
+    has source_url: str;
     has format_note: str = "";
     has languages: str = "en";
-    has source_url: str;
 }
 
 node Deadline {
     has kind: str;                  # comment | appeal | signature | hearing
     has date: str;                  # ISO. "unknown" is allowed; a guess is not.
-    has threshold: str = "";        # e.g. signature count, if applicable
     has source_url: str;
+    has threshold: str = "";        # e.g. signature count, if applicable
 }
 
 
@@ -133,7 +133,7 @@ node Tactic {
 node Outcome {
     has result: str;                # succeeded | failed | partial | unresolved
     has note: str = "";
-    has verified: bool = false;     # false => do NOT claim it on stage
+    has verified: bool = False;     # False => do NOT claim it on stage
 }
 
 

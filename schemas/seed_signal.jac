@@ -54,16 +54,30 @@ def seed_signal() {
     recpark +>: accountable_to :+> citywide;
 
     # --- inside_process is the whole story of this case
+    # contact fields resolved live via ingest/extract/orgs.py (Task 5);
+    # mua and geary_cyc below have no org-level contact on their public
+    # sites as of this scrape — honest blank, not a guess.
     ccba = Organization(name="Chinese Consolidated Benevolent Association",
                         community="Chinatown family associations",
-                        language="zh", inside_process=False);
+                        language="zh", contact="info@chssc.org",
+                        inside_process=False);
     mua  = Organization(name="Merchants United Association of San Francisco",
                         community="Chinatown / Sunset / Ocean Ave merchants",
-                        language="zh", inside_process=False);
+                        language="zh", contact="", inside_process=False);
     ccdc = Organization(name="Chinatown Community Development Center",
                         community="Chinatown residents",
-                        language="en", inside_process=True);
-    for o in [ccba, mua, ccdc] { o +>: serves :+> ct; }
+                        language="en", contact="info@chinatowncdc.org",
+                        inside_process=True);
+    sf_chamber = Organization(name="SF Chamber of Commerce",
+                        community="San Francisco business community",
+                        language="en", contact="info@sfchamber.com, 415.392.4520",
+                        inside_process=False);
+    cyc = Organization(name="Community Youth Center",
+                        community="Chinatown youth and families",
+                        language="zh", contact="hello@cycsf.org, (415) 775-1345",
+                        inside_process=False);
+    for o in [ccba, mua, ccdc, cyc] { o +>: serves :+> ct; }
+    sf_chamber +>: serves :+> citywide;
 
     t1 = Testimony(speaker="CCBA board member (5 decades)",
                    affiliation="CCBA",
@@ -88,6 +102,16 @@ def seed_signal() {
     # TODO(P1): Rec & Park Commission agenda + public comment instructions
     # TODO(P1): D3 supervisor office contact + accepted comment format
     # TODO(P1): remaining appeal or hearing window
+    #
+    # ATTEMPTED (ingest/extract/procedure.py, live Firecrawl run): sfrecpark.org's
+    # AgendaCenter/DocumentCenter links retire fast — every candidate page
+    # mapped for this project 404'd by scrape time. sfbos.org/sf.gov turned
+    # up Danny Sauter's D3 page, but it routes to public-records requests,
+    # not a project-specific comment channel. No live, citable channel for
+    # either body — leaving this a GAP (not a guess) is itself the finding:
+    # it's the same gap Danny Sauter's office confirmed (§Failure Mode A in
+    # DESIGNDOC.md). DecisionWalker will report it in smoke.jac.
+    #
     # Pattern once you have a real source:
     #   ch = CommentChannel(recipient="...", method="email",
     #                       languages="en,zh", source_url="https://...");
@@ -124,12 +148,26 @@ def seed_signal() {
     pk +>: decided_by :+> electorate;
     electorate +>: accountable_to :+> citywide;
 
-    sunset_assoc = Organization(name="Sunset neighborhood associations",
-                                community="Sunset residents");
-    rich_assoc   = Organization(name="Richmond neighborhood associations",
-                                community="Richmond residents");
-    sunset_assoc +>: serves :+> sunset;
-    rich_assoc   +>: serves :+> richmond;
+    # Replaced with the specific orgs from config/orgs.yaml (Task 5) —
+    # more actionable than the generic placeholders this case started with.
+    # These are impact-zone (westside) organizing contacts, not a decision-
+    # zone intermediary — per DESIGNDOC.md's "eastside problem", no such
+    # intermediary exists for Prop K, and we didn't invent one.
+    richmond_ctr = Organization(name="Richmond Neighborhood Center",
+                                community="Richmond residents",
+                                contact="", inside_process=False);
+    geary_assoc  = Organization(name="Geary Merchants Association",
+                                community="Richmond merchants",
+                                contact="", inside_process=False);
+    lowell_ptsa  = Organization(name="Lowell High School PTSA",
+                                community="Sunset families",
+                                contact="LowellPTSA101@gmail.com",
+                                inside_process=False);
+    sunset_church = Organization(name="Sunset churches",
+                                community="Sunset residents",
+                                contact="", inside_process=False);
+    for o in [richmond_ctr, geary_assoc] { o +>: serves :+> richmond; }
+    for o in [lowell_ptsa, sunset_church] { o +>: serves :+> sunset; }
 
     t4 = Testimony(speaker="Opposition organizer",
                    affiliation="No on K campaign",
