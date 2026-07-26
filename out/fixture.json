@@ -8,8 +8,14 @@
       "timeline": "groundbreaking June 2026",
       "source_url": "",
       "fetched_at": "",
-      "geo_zones": ["Chinatown", "District 3"],
-      "decision_bodies": ["SF Recreation and Park Department", "District 3 Supervisor's Office"]
+      "geo_zones": [
+        "Chinatown",
+        "District 3"
+      ],
+      "decision_bodies": [
+        "SF Recreation and Park Department",
+        "District 3 Supervisor's Office"
+      ]
     },
     {
       "name": "Proposition K (Upper Great Highway closure)",
@@ -19,41 +25,79 @@
       "timeline": "passed Nov 2024",
       "source_url": "",
       "fetched_at": "",
-      "geo_zones": ["Sunset", "Richmond"],
-      "decision_bodies": ["San Francisco citywide electorate"]
+      "geo_zones": [
+        "Sunset",
+        "Richmond"
+      ],
+      "decision_bodies": [
+        "San Francisco citywide electorate"
+      ]
     }
   ],
   "geo_zones": [
-    { "name": "Chinatown", "kind": "neighborhood", "population_est": 0, "notes": "" },
-    { "name": "District 3", "kind": "district", "population_est": 0, "notes": "" },
-    { "name": "Sunset", "kind": "neighborhood", "population_est": 0, "notes": "" },
-    { "name": "Richmond", "kind": "neighborhood", "population_est": 0, "notes": "" },
-    { "name": "San Francisco (citywide electorate)", "kind": "citywide", "population_est": 0, "notes": "" }
+    {
+      "name": "Chinatown",
+      "kind": "neighborhood",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "District 3",
+      "kind": "district",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "Sunset",
+      "kind": "neighborhood",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "Richmond",
+      "kind": "neighborhood",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "San Francisco (citywide electorate)",
+      "kind": "citywide",
+      "population_est": 0,
+      "notes": ""
+    }
   ],
   "decision_bodies": [
     {
       "name": "SF Recreation and Park Department",
       "kind": "commission",
       "jurisdiction": "citywide agency",
-      "accountable_to": ["San Francisco (citywide electorate)"]
+      "accountable_to": [
+        "San Francisco (citywide electorate)"
+      ]
     },
     {
       "name": "District 3 Supervisor's Office",
       "kind": "supervisor",
       "jurisdiction": "District 3",
-      "accountable_to": ["District 3"]
+      "accountable_to": [
+        "District 3"
+      ]
     },
     {
       "name": "San Francisco citywide electorate",
       "kind": "electorate",
       "jurisdiction": "citywide",
-      "accountable_to": ["San Francisco (citywide electorate)"]
+      "accountable_to": [
+        "San Francisco (citywide electorate)"
+      ]
     },
     {
       "name": "SF Planning Department",
       "kind": "department",
       "jurisdiction": "citywide agency",
-      "accountable_to": ["San Francisco (citywide electorate)"]
+      "accountable_to": [
+        "San Francisco (citywide electorate)"
+      ]
     }
   ],
   "comment_channels": [
@@ -64,8 +108,12 @@
       "languages": "English, 繁體中文, Español, Filipino, Tiếng Việt",
       "source_url": "https://sfplanning.org/public-hearings",
       "deadlines": [
-        { "kind": "comment", "date": "unknown", "threshold": "",
-          "source_url": "https://sfplanning.org/public-hearings" }
+        {
+          "kind": "comment",
+          "date": "unknown",
+          "threshold": "",
+          "source_url": "https://sfplanning.org/public-hearings"
+        }
       ]
     },
     {
@@ -75,8 +123,12 @@
       "languages": "English,繁體中文,Español,Filipino,Tiếng Việt",
       "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project",
       "deadlines": [
-        { "kind": "comment", "date": "2021-07-09", "threshold": "",
-          "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project" }
+        {
+          "kind": "comment",
+          "date": "2021-07-09",
+          "threshold": "",
+          "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project"
+        }
       ]
     },
     {
@@ -86,8 +138,12 @@
       "languages": "Spanish, Cantonese, Filipino",
       "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element",
       "deadlines": [
-        { "kind": "comment", "date": "2021-07-16", "threshold": "",
-          "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element" }
+        {
+          "kind": "comment",
+          "date": "2021-07-16",
+          "threshold": "",
+          "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element"
+        }
       ]
     }
   ],
@@ -98,7 +154,9 @@
       "language": "zh",
       "contact": "info@chssc.org",
       "inside_process": false,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "resolved from https://chssc.org/chinese-consolidated-benevolent-association/"
     },
     {
@@ -107,7 +165,9 @@
       "language": "zh",
       "contact": "",
       "inside_process": false,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "checked https://chinatownmerchantssf.org/ and 1 contact page(s), no org-level contact found"
     },
     {
@@ -116,7 +176,9 @@
       "language": "en",
       "contact": "info@sfchamber.com, 415.392.4520",
       "inside_process": false,
-      "serves": ["San Francisco (citywide electorate)"],
+      "serves": [
+        "San Francisco (citywide electorate)"
+      ],
       "notes": "resolved from https://sfchamber.com/contact-us"
     },
     {
@@ -125,7 +187,9 @@
       "language": "zh",
       "contact": "hello@cycsf.org, (415) 775-1345",
       "inside_process": false,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "resolved from https://www.cycsf.org/contact"
     },
     {
@@ -134,7 +198,9 @@
       "language": "en",
       "contact": "info@chinatowncdc.org",
       "inside_process": true,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "resolved from https://www.chinatowncdc.org/about-us/contact-us"
     },
     {
@@ -143,7 +209,9 @@
       "language": "en",
       "contact": "",
       "inside_process": false,
-      "serves": ["Richmond"],
+      "serves": [
+        "Richmond"
+      ],
       "notes": "checked https://richmondsf.org/ and 2 contact page(s), no org-level contact found"
     },
     {
@@ -152,7 +220,9 @@
       "language": "en",
       "contact": "",
       "inside_process": false,
-      "serves": ["Richmond"],
+      "serves": [
+        "Richmond"
+      ],
       "notes": "checked https://www.gearyblvd.org/ and 2 contact page(s), no org-level contact found"
     },
     {
@@ -161,7 +231,9 @@
       "language": "en",
       "contact": "LowellPTSA101@gmail.com",
       "inside_process": false,
-      "serves": ["Sunset"],
+      "serves": [
+        "Sunset"
+      ],
       "notes": "resolved from http://www.lowellptsa.org/contact-us.html; org-level PTSA contact only, no parent records"
     },
     {
@@ -170,7 +242,9 @@
       "language": "en",
       "contact": "",
       "inside_process": false,
-      "serves": ["Sunset"],
+      "serves": [
+        "Sunset"
+      ],
       "notes": "config/orgs.yaml flags this as needing resolution to a specific congregation before scraping; generic search (sunset.life) found no org-level contact, as expected pre-resolution"
     }
   ],
@@ -352,5 +426,72 @@
       "source_url": "https://www.spur.org/voter-guide/2024-11/sf-prop-k-upper-great-highway"
     }
   ],
-  "incidents": []
+  "incidents": [
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 36 comments: Commenters share nostalgic memories of the pedestrian bridge at Portsmouth Square, recalling its use for accessing nearby hotels, viewing neighborhood events, and as a skate spot, while reflecting on its cultural significance to the area. The prevailing sentiment is wistful about the bridge's removal, with some concern about the loss of recreational and cultural gathering spaces.",
+      "count": 36,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1pqrt0y/san_franciscos_most_controversial_bridge_is/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 10 comments: A major renovation project for a central urban public square is underway, featuring infrastructure improvements and expanded community facilities. Community responses include nostalgia about previous renovations and concerns about historic preservation and the removal of existing structures.",
+      "count": 10,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1u3e1ue/breaking_ground_on_portsmouth_square_chinatowns/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 6 comments: The thread discusses community opposition to the removal of a historic pedestrian bridge at Portsmouth Square, citing concerns about cultural and spiritual significance. Commenters express varied skepticism, ranging from political action threats to questioning whether Feng Shui should guide urban planning decisions, with one suggestion to relocate a fountain instead.",
+      "count": 6,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1lwim3y/the_community_opposes_the_removal_of_a_historic/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 4 comments: Participants discuss the Portsmouth Square renovation design, with appreciation for modernization mixed with concerns about insufficient cultural representation and skepticism about building a park atop a parking garage. The thread specifically references the planned pedestrian bridge removal and questions whether the project adequately addresses underlying structural compromises.",
+      "count": 4,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1h91m3p/what_do_you_think_of_the_planned_renovations_for/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 536 comments: Participants debate whether permanently closing the Great Highway to create a waterfront park aligns with San Francisco's walkability goals, with supporters citing benefits for public space and neighborhood gathering while others raise practical concerns about traffic displacement and the substantial costs and infrastructure challenges involved in building an adequate park.",
+      "count": 536,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1f9sd6q/prop_k_closing_the_great_highway_lets_discuss/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 438 comments: A political coalition is gathering signatures for a ballot measure to reopen the coastal Great Highway, with observers expressing skepticism about the campaign's organizational capacity to meet signature requirements. Commenters expect the measure would qualify for a citywide November ballot and anticipate a closely contested outcome similar to the 2024 vote on the same issue.",
+      "count": 438,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1updfg0/great_highway_measure_to_reopen_coastal_road_set/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 268 comments: A ballot measure proposing to partially reopen the Upper Great Highway to car traffic on weekends is being debated, with commenters strongly opposed and citing the 2024 voter mandate that chose permanent park conversion. The prevailing sentiment expresses frustration that proponents continue to pursue the issue despite a decisive previous electoral result and raises practical concerns about traffic impacts.",
+      "count": 268,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1v4nalb/great_highway_controversy_to_return_to_sf_voters/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 238 comments: The thread discusses a lawsuit filed by Prop K opponents challenging the Great Highway closure on environmental review grounds. Commenters express skepticism about the lawsuit's prospects while debating the motivations of the opposition's organizers, with sentiment leaning toward viewing the legal challenge as likely unsuccessful.",
+      "count": 238,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1j8imno/prop_k_opponents_sue_to_stop_great_highway_closure/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 112 comments: The thread discusses state approval for Great Highway Park and the continued efforts to establish it despite opposition groups attempting to block its implementation following Proposition K's passage. Commenters express support for the park initiative and propose incorporating public transit options while preserving emergency vehicle access.",
+      "count": 112,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1hfsntp/if_you_want_great_highway_park_to_exist_plz_stay/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 104 comments: The thread discusses post-passage implementation challenges and timeline concerns following Prop K's approval to permanently close the Upper Great Highway, with commentary on projected cost savings, budgetary constraints, and geographic voting divides showing the west side's continued skepticism about the measure despite broader city support.",
+      "count": 104,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1gqsn08/what_are_the_next_steps_for_great_highway_after/"
+    },
+    {
+      "kind": "forum",
+      "summary": "r/sanfrancisco thread, 15 comments: The thread discusses a comparison between closing the Great Highway to cars (Prop K) and similar changes made to Valencia Street, with most commenters being supportive of Prop K or dismissive of opponents' arguments, while a minority raise concerns about traffic and business impacts.",
+      "count": 15,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1gby58c/prop_k_opponents_say_great_highway_is_next/"
+    }
+  ]
 }
