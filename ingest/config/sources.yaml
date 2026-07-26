@@ -22,9 +22,13 @@ apis:
       Granicus Web API. Verified live (2026-07-26): client identifier is
       "sfgov" (webapi.legistar.com/v1/sfgov/*) — "sanfrancisco" 500s.
       fetch/legistar.py re-probes at runtime rather than trusting this note.
-      DATA IS STALE: newest matter in the API is Sept 2020 — SF stopped
-      syncing it. Historical records (1999-2020) only; useless for current
-      matters (Portsmouth Square renovation, Prop K both post-date it).
+      NEW-MATTER FEED IS FROZEN: last real legislation ~Dec 2018, last
+      (temp) record Sept 2020; /Events was never configured and 400s. The
+      public InSite portal (sfgov.legistar.com) IS current but scrape-only —
+      hence its entry under firecrawl_targets.procedure below. Web API is a
+      historical-precedent source only; useless for current matters
+      (Portsmouth Square renovation, Prop K both post-date the freeze).
+      Full probe notes in fetch/legistar.py.
   # open311: removed. GeoReport v2 is vendor-run (spotmobile.net) and every
   # jurisdiction_id 404s without a provisioned API key we don't have. The
   # same 311 data is in Socrata (fetch/socrata.py), no key needed.

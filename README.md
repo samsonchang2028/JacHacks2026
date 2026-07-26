@@ -68,11 +68,15 @@ the code rather than silently dropped:
 
 - **Open311 (removed)** — SF's GeoReport v2 endpoint is vendor-run and
   requires an API key we don't have; the same 311 data is in Socrata anyway.
-- **Legistar is frozen at Sept 2020** — the API works and holds real
-  legislative records (1999–2020), but SF stopped syncing it, so neither the
-  Portsmouth Square renovation (2023+) nor Prop K (2024) exists in it.
-  Usable for historical precedent only, never for current matters. See the
-  warning in `ingest/fetch/legistar.py`.
+- **Legistar Web API's new-matter feed is frozen** — the last real
+  legislation in it is from ~Dec 2018 (plus a stray temp record in Sept
+  2020), so neither the Portsmouth Square renovation (2023+) nor Prop K
+  (2024) exists in it. Old records still receive metadata updates and the
+  public portal (sfgov.legistar.com) *is* current — but the portal is
+  scrape-only, which is why it's listed under the Firecrawl procedure
+  targets instead. The `/Events` endpoint was never configured for SF and
+  always 400s. Usable for historical precedent only. Full probe notes in
+  `ingest/fetch/legistar.py`.
 
 ### Firecrawl-backed extraction (spends credits on first run per URL)
 

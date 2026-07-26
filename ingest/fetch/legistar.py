@@ -8,16 +8,28 @@
 # this file without re-checking, per the "resolve at runtime"
 # rule for all endpoint paths in the ingestion spec.
 #
-# ⚠️ DATA IS STALE (verified live 2026-07-26): the newest matter
-# in this API is Sept 2020 — SF stopped syncing it to the Granicus
-# Web API. Keyword search works and returns real legislative
-# records (e.g. 'Portsmouth Square' -> 6 matters, 'Great Highway'
-# -> 10), but everything is 1999-2020. Neither the Portsmouth
-# Square renovation (2023+) nor Prop K (2024) exists here. Treat
-# this as a historical-precedent source only, never as a source
-# for current/pending items — the spec's §3 assumption that this
-# is "the real source for pending legislative items" is false for
-# SF today.
+# ⚠️ WHAT EXACTLY IS FROZEN (verified live 2026-07-26, by max
+# MatterId, MatterLastModifiedUtc, Events, and the InSite portal):
+#   - NEW-MATTER INGESTION STOPPED: highest MatterId is a Sept 2020
+#     temp record (T19-021); the last real legislation is from
+#     ~Dec 2018 (file 181184). Nothing newer is ever created here.
+#   - old matters still get metadata touches (lastmod up to Nov
+#     2025), so the DB isn't disconnected — it just receives no
+#     new legislation.
+#   - /Events was NEVER available for this client: it 400s with
+#     "'Agenda Draft Status' ... is not setup in settings" — a
+#     misconfiguration, not staleness. get_events_for_body() below
+#     will always fail; kept only to document that.
+#   - Legistar itself is NOT dead for SF: the public InSite portal
+#     (sfgov.legistar.com) is fully current — but only reachable by
+#     scraping, which is why sources.yaml lists it under
+#     firecrawl_targets.procedure.
+# Net: keyword search here works ('Portsmouth Square' -> 6 matters,
+# 'Great Highway' -> 10) but tops out at 2018/2020. Neither the
+# Portsmouth Square renovation (2023+) nor Prop K (2024) exists in
+# this API. Historical-precedent source only; the spec's §3
+# assumption that this is "the real source for pending legislative
+# items" is false for SF today.
 #
 #   python -m ingest.fetch.legistar --smoke
 # ============================================================
@@ -93,7 +105,10 @@ def search_matters(keyword: str, top: int = 25) -> list[dict]:
 
 
 def get_events_for_body(body_id: int, top: int = 25) -> list[dict]:
-    """Agendas/meetings for a body (e.g. Board of Supervisors, a commission)."""
+    """Agendas/meetings for a body. BROKEN for the sfgov client: /Events
+    400s with a server-side settings error (see module docstring) — SF never
+    configured agenda visibility on the Web API. Current agendas live on
+    sfgov.legistar.com (InSite), scrape-only."""
     params = {
         "$top": top,
         "$filter": f"EventBodyId eq {body_id}",
