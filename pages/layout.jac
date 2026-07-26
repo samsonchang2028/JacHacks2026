@@ -29,10 +29,10 @@ cl {
                                 Find Actions
                             </Link>
                             <Link
-                                to="/how"
-                                className={"nav-link active" if path.startswith("/how") else "nav-link"}
+                                to="/notes"
+                                className={"nav-link active" if path.startswith("/notes") else "nav-link"}
                             >
-                                How it works
+                                Community Notes
                             </Link>
                         </div>
                     </nav>

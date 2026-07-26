@@ -2,8 +2,9 @@
 
 The pressing-now feed spawns `find_issues` against the real graph rather than
 rendering fixture counts. Record/source-type totals are deliberately absent --
-there are no Concern nodes yet, and inventing those numbers would break the
-retrieved-not-generated rule the page itself advertises.
+the only Concern nodes in the graph are unverified community notes, and
+counting those as issue signal would break the retrieved-not-generated rule the
+page itself advertises.
 """
 
 cl import from "@jac/runtime" { Link }

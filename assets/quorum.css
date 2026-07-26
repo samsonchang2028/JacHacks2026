@@ -312,69 +312,113 @@ h1 {
   }
 }
 
-.how-shell {
+/* ---- community notes -------------------------------------------------- */
+
+.notes-shell {
   max-width: 760px;
 }
 
-.how-steps {
+.note-form {
   display: grid;
   gap: 18px;
-  margin: 28px 0 0;
+  margin: 28px 0 44px;
+  padding: 22px 24px;
+  border: 1px solid #eaded2;
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field label {
+  color: #173f45;
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+}
+
+.field .hint {
+  color: #7b8a8a;
+  font-size: var(--t-fine);
+  font-weight: var(--w-normal);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #eaded2;
+  border-radius: var(--r-md);
+  color: #173f45;
+  background: #fff;
+  font: inherit;
+  font-size: var(--t-body);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #9aa8a8;
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible {
+  border-color: transparent;
+  outline: 3px solid rgba(139, 211, 215, 0.8);
+  outline-offset: 1px;
+}
+
+.field textarea + .hint {
+  justify-self: end;
+}
+
+.note-error {
+  margin: 0;
+  color: #b8402c;
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+}
+
+.notes-heading {
+  margin: 0 0 16px;
+  color: #173f45;
+  font-size: var(--t-lead);
+  font-weight: var(--w-bold);
+}
+
+.note-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.how-step {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 16px;
-  align-items: start;
+.note {
   padding: 18px 20px;
   border: 1px solid #eaded2;
   border-radius: var(--r-lg);
   background: rgba(255, 255, 255, 0.72);
 }
 
-.how-num {
-  display: inline-grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-md);
+.note-name {
+  margin-bottom: 6px;
   color: #173f45;
-  background: #e8f4f4;
+  font-size: var(--t-body);
   font-weight: var(--w-bold);
 }
 
-.how-step:nth-child(2) .how-num {
-  background: #fff3cf;
-}
-
-.how-step:nth-child(3) .how-num {
-  background: #ffe2dd;
-  color: #b8402c;
-}
-
-.how-step h3 {
-  margin: 0 0 6px;
-  color: #173f45;
-  font-size: var(--t-lead);
-  line-height: 1.25;
-}
-
-.how-step p {
+.note-body {
   margin: 0;
   color: #435757;
   font-size: var(--t-body);
   line-height: 1.55;
-}
-
-.how-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  align-items: center;
-  margin-top: 28px;
+  /* notes are freeform text -- keep the author's line breaks */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 980px) {
@@ -454,9 +498,8 @@ h1 {
     width: auto;
   }
 
-  .how-actions {
-    flex-direction: column;
-    align-items: stretch;
+  .note-form {
+    padding: 18px 16px;
   }
 }
 

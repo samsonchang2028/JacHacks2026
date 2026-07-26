@@ -74,6 +74,16 @@ node ActionStep {
         how: str = "";
 }
 
+"""A community note. Hangs off root -- deliberately not tied to an Issue.
+
+ponytail: no timestamp field; the list is ordered newest-first by insertion
+order. Add a datetime import if admins ever need actual dates.
+"""
+node Concern {
+    has name: str,
+        body: str;
+}
+
 edge decided_by {}
 edge impacts {}
 edge accountable_to {}
@@ -436,6 +446,55 @@ walker:pub issue_detail {
             "actions": actions,
             "path": path
         };
+    }
+}
+
+glob NAME_MAX = 80;
+glob BODY_MAX = 1000;
+
+
+"""Every community note, newest first."""
+def notes_payload() -> list {
+    out: list = [];
+    for c in [root-->[?:Concern]] {
+        out.append({"name": c.name, "body": c.body});
+    }
+    out.reverse();
+    return out;
+}
+
+
+walker:pub list_notes {
+    """Read the community-notes wall."""
+
+    can collect with Root entry {
+        report notes_payload();
+    }
+}
+
+
+walker:pub add_note {
+    """Write a community note. Untrusted input -- validate before it lands.
+
+    Reports the refreshed wall so the client re-renders from one spawn.
+    """
+
+    has name: str = "";
+    has body: str = "";
+
+    can write with Root entry {
+        clean_body = self.body.strip();
+        if clean_body == "" {
+            report {"ok": False, "error": "Write a concern before submitting."};
+            disengage;
+        }
+        clean_name = self.name.strip();
+        if clean_name == "" {
+            clean_name = "Anonymous";
+        }
+
+        root ++> Concern(name=clean_name[:NAME_MAX], body=clean_body[:BODY_MAX]);
+        report {"ok": True, "notes": notes_payload()};
     }
 }
 
