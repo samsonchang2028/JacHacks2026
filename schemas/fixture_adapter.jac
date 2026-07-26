@@ -21,7 +21,7 @@ glob GEOZONE_KINDS: list[str] = [
     "district", "neighborhood", "citywide"
 ];
 glob INCIDENT_KINDS: list[str] = [
-    "311", "complaint_log"
+    "311", "complaint_log", "forum"
 ];
 glob TESTIMONY_KINDS: list[str] = [
     "testimony", "argument", "evidence", "counterargument"
