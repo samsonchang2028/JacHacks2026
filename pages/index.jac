@@ -1,76 +1,130 @@
-"""Landing page: the thesis + impact vs decision demo moment."""
+"""Landing: hero, the problem, the solution, what is pressing now.
+
+The pressing-now feed spawns `find_issues` against the real graph rather than
+rendering fixture counts. Record/source-type totals are deliberately absent --
+there are no Concern nodes yet, and inventing those numbers would break the
+retrieved-not-generated rule the page itself advertises.
+"""
 
 cl import from "@jac/runtime" { Link }
 cl import from ..components.HeroMap { HeroMap }
+cl import from ..components.ProblemCharts { ProblemCharts }
 
 cl {
     def:pub page -> JsxElement {
+        has issues: list = [];
+
+        async can with entry {
+            root spawn seed_graph();
+            found = root spawn find_issues();
+            issues = found.reports[0];
+        }
+
         return
-            <div className="hero-grid">
-                <div className="hero-copy">
-                    <p className="eyebrow">Quorum</p>
-                    <h1>Make community objections count.</h1>
-                    <p className="lead">Who decides, what action counts, and where your community's effort should go - especially when the impact zone and the decision zone are not the same place.</p>
+            <div className="landing">
 
-                    <div className="hero-actions" aria-label="Primary actions">
-                        <Link
-                            className="case-button active"
-                            to="/actions?case=portsmouth-square"
-                        >
-                            Analyse a civic action
-                        </Link>
-                        <Link className="case-button" to="/how">
-                            See how it works
-                        </Link>
-                    </div>
-                    <div className="hero-secondary" aria-label="Other demo paths">
-                        <Link className="text-button" to="/actions?case=prop-k">
-                            Or try Proposition K
-                        </Link>
-                        <Link className="text-button" to="/actions">
-                            See every open issue
-                        </Link>
-                    </div>
-
-                    <div className="value-points" aria-label="What Quorum returns">
-                        <article>
-                            <span>1</span>
-                            <strong>Who decides</strong>
-                            <small>The body or electorate that controls the outcome</small>
-                        </article>
-                        <article>
-                            <span>2</span>
-                            <strong>What counts</strong>
-                            <small>The verified channel and deadline the record accepts</small>
-                        </article>
-                        <article>
-                            <span>3</span>
-                            <strong>Where effort goes</strong>
-                            <small>Impact zone vs decision zone - reroute when they diverge</small>
-                        </article>
-                    </div>
-                </div>
-
-                <div
-                    className="map-visual"
-                    aria-label="Illustration: Chinatown impact zone inside a wider decision zone that answers elsewhere"
-                >
-                    <div className="map-base">
-                        <HeroMap/>
-                        <div className="decision-ring" aria-hidden="true">
-                            <span className="zone-tag decision">Decision zone</span>
+                <section className="hero" id="top">
+                    <HeroMap/>
+                    <div className="hero-inner">
+                        <h1>Make community objections count.</h1>
+                        <p className="hero-sub">
+                            Who decides, what action counts, and where your community's
+                            effort should go — especially when the impact zone and the
+                            decision zone are not the same place.
+                        </p>
+                        <div className="cta-row">
+                            <Link className="btn btn-primary" to="/actions">Analyse a civic action</Link>
+                            <a className="btn btn-ghost" href="#solution">See how it works</a>
                         </div>
-                        <div className="impact-ring" aria-hidden="true">
-                            <span className="zone-tag impact">Impact zone</span>
-                        </div>
-                        <div className="map-pin" aria-hidden="true"></div>
-                        <aside className="floating-card">
-                            <small>Divergence</small>
-                            <strong>Impact zone is not the decision zone</strong>
-                            <span>Your outreach is aimed at people who already agree</span>
-                        </aside>
                     </div>
-                </div>
+                </section>
+
+                <section className="problem" id="problem">
+                    <h2>Caring is not the missing ingredient.</h2>
+                    <p className="section-lead">Civic engagement fails in three ways, and they need opposite fixes.</p>
+
+                    <div className="fail-grid">
+                        <article className="fail">
+                            <span className="fail-tag quiet">Heard too little</span>
+                            <h3>It never becomes countable</h3>
+                            <p>People hold a position and tell each other. It never reaches the channel that counts, before the deadline.</p>
+                        </article>
+                        <article className="fail">
+                            <span className="fail-tag loud">Heard too much</span>
+                            <h3>Volume arrives, standing does not</h3>
+                            <p>Hundreds of near-identical letters get recognised as bulk and weighed as one. The countable unit is a distinct submitter.</p>
+                        </article>
+                        <article className="fail">
+                            <span className="fail-tag astray">Heard by the wrong people</span>
+                            <h3>Aimed at the wrong electorate</h3>
+                            <p>Well-funded organising, pointed at the people already affected — who already agree — not at whoever decides.</p>
+                        </article>
+                    </div>
+
+                    <ProblemCharts/>
+                </section>
+
+                <section className="solution" id="solution">
+                    <h2>Quorum puts the whole picture in one place.</h2>
+                    <p className="section-lead">Scattered signal in. One countable action out.</p>
+
+                    <div className="steps">
+                        <article className="step">
+                            <div className="step-n">1</div>
+                            <h3>Aggregate</h3>
+                            <p>311, agendas, press and community records — deduplicated into one issue.</p>
+                        </article>
+                        <article className="step">
+                            <div className="step-n">2</div>
+                            <h3>Find who decides</h3>
+                            <p>The body that approves it, and who that body answers to.</p>
+                        </article>
+                        <article className="step">
+                            <div className="step-n">3</div>
+                            <h3>Retrieve what counts</h3>
+                            <p>Channel, format and deadline — each with a source and a date.</p>
+                        </article>
+                        <article className="step">
+                            <div className="step-n">4</div>
+                            <h3>Aim it</h3>
+                            <p>Impact zone vs decision zone. When they differ, re-aim.</p>
+                        </article>
+                    </div>
+
+                    <div className="rule-strip">
+                        <span><b>Retrieved, never generated.</b> No source, no claim — Quorum shows a gap instead of a guess.</span>
+                    </div>
+                </section>
+
+                <section className="pressing" id="pressing">
+                    <h2>What is building across San Francisco.</h2>
+                    <p className="section-lead">Live from the graph. Coral rows have a full procedural record.</p>
+
+                    <div className="feed">
+                        {[
+                            <Link
+                                className={"feed-item hot" if i["tier"] == "full" else "feed-item"}
+                                key={i["slug"]}
+                                to={"/issue/" + i["slug"]}
+                            >
+                                <div>
+                                    <div className="feed-title">{i["title"]}</div>
+                                    <div className="feed-meta">{i["district"]}</div>
+                                </div>
+                                <span className={"status review" if i["tier"] == "full" else "status watch"}>
+                                    {"Full record" if i["tier"] == "full" else "Monitoring"}
+                                </span>
+                            </Link>
+                            for i in issues
+                        ]}
+                    </div>
+
+                    <div className="feed-foot">
+                        <p className="feed-note">Record counts land when the concern pipeline does.</p>
+                        <Link className="btn btn-primary" to="/actions">Analyse a civic action</Link>
+                    </div>
+                </section>
+
             </div>;
     }
 }

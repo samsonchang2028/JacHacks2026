@@ -1,9 +1,27 @@
 /* One central font across the whole app -- the serif from the page titles. */
 :root {
+  --ink: #173f45;
+  --ink-soft: #4a5c5c;
+  --ink-faint: #8a7b6d;
+  --cream: #fff8ef;
+  --card: #fffcf7;
+  --line: #ebdfd2;
+  --coral: #de5b49;
+  --coral-deep: #b8402c;
+  --peach: #f6b08e;
+  --peach-deep: #e7c9b5;
+  --teal: #6fb9bd;
+  --teal-pale: #eaf5f1;
+  --shadow-warm: 0 10px 26px rgba(83, 55, 37, 0.09);
+
   color: #173f45;
   background: #fff8ef;
   font-family: Georgia, "Times New Roman", serif;
   font-synthesis: none;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 * {
@@ -15,14 +33,19 @@ html {
   background: #fff8ef;
 }
 
+/* The warm washes are the Quorum signature: peach and teal, fixed so they drift
+   under the content as the page scrolls rather than scrolling away with it. */
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
   background:
-    radial-gradient(circle at 2% 18%, rgba(246, 176, 142, 0.26), transparent 27rem),
-    radial-gradient(circle at 96% 88%, rgba(139, 211, 215, 0.25), transparent 30rem),
+    radial-gradient(circle at 3% 6%, rgba(246, 176, 142, 0.34), transparent 34rem),
+    radial-gradient(circle at 97% 34%, rgba(139, 211, 215, 0.26), transparent 36rem),
+    radial-gradient(circle at 8% 72%, rgba(246, 176, 142, 0.22), transparent 32rem),
+    radial-gradient(circle at 92% 96%, rgba(139, 211, 215, 0.24), transparent 34rem),
     #fff8ef;
+  background-attachment: fixed;
 }
 
 button,

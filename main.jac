@@ -443,6 +443,7 @@ walker:pub issue_detail {
 
 cl import "leaflet/dist/leaflet.css";
 cl import "./assets/quorum.css";
+cl import "./assets/landing.css";
 cl import "./assets/actions.css";
 
 cl {

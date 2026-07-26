@@ -1,7 +1,7 @@
-"""Decorative real map behind the hero. No pan, no zoom, no clicks.
+"""Decorative SF backdrop behind the hero. No pan, no zoom, no clicks.
 
-The rings and pin sit on top as CSS overlays (see .decision-ring / .impact-ring /
-.map-pin) because the view never moves -- no need to project them geographically.
+The scrim that keeps the headline readable over it lives in landing.css
+(.hero::after) rather than here, so the copy and the map stay independent.
 """
 
 import from "react-leaflet" { MapContainer, TileLayer }
@@ -10,7 +10,7 @@ def:pub HeroMap -> JsxElement {
     return
         <MapContainer
             className="hero-map"
-            center={[37.7935, -122.4085]}
+            center={[37.7749, -122.4310]}
             zoom={13}
             zoomControl={False}
             dragging={False}

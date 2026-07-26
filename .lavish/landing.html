@@ -1,0 +1,611 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quorum — Landing (mockup)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, h1, h2, h3, li) { overflow-wrap: anywhere; }
+
+  :root {
+    --ink:        #173f45;
+    --ink-soft:   #4a5c5c;
+    --ink-faint:  #8a7b6d;
+    --cream:      #fff8ef;
+    --card:       #fffcf7;
+    --line:       #ebdfd2;
+    --coral:      #de5b49;
+    --coral-deep: #b8402c;
+    --peach:      #f6b08e;
+    --peach-deep: #e7c9b5;
+    --teal:       #6fb9bd;
+    --teal-pale:  #eaf5f1;
+
+    --shadow-warm: 0 10px 26px rgba(83, 55, 37, 0.09);
+
+    --gap: 18px;
+    --step: 34px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  /* The warm washes are the Quorum signature: peach top-left, teal bottom-right,
+     fixed so they drift under the content as the page scrolls. */
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 3% 6%,   rgba(246, 176, 142, 0.34), transparent 34rem),
+      radial-gradient(circle at 97% 34%, rgba(139, 211, 215, 0.26), transparent 36rem),
+      radial-gradient(circle at 8% 72%,  rgba(246, 176, 142, 0.22), transparent 32rem),
+      radial-gradient(circle at 92% 96%, rgba(139, 211, 215, 0.24), transparent 34rem),
+      var(--cream);
+    background-attachment: fixed;
+    font-family: Georgia, "Times New Roman", serif;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; }
+
+  .wrap { width: min(1180px, 100%); margin: 0 auto; padding: 0 40px; }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; padding: 16px 0;
+    background: rgba(255, 248, 239, 0.88);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--coral), #f6b08e);
+    position: relative;
+  }
+  .brand-mark::before, .brand-mark::after {
+    content: ""; position: absolute; border-radius: 50%; background: var(--cream);
+  }
+  .brand-mark::before { top: 7px; left: 7px; width: 11px; height: 11px; }
+  .brand-mark::after  { right: 7px; bottom: 8px; width: 7px; height: 7px; }
+
+  .nav-links { display: flex; gap: 6px; }
+  .nav-links a {
+    padding: 8px 14px; border-radius: 999px;
+    color: var(--ink-soft); font-size: 15px;
+  }
+  .nav-links a:hover { background: var(--teal-pale); color: var(--ink); }
+
+  /* ---------- sections ---------- */
+  section { padding: var(--step) 0 calc(var(--step) * 2); }
+  h2 {
+    margin: 0 0 16px;
+    font-size: clamp(30px, 3.6vw, 46px); font-weight: 400;
+    line-height: 1.1; letter-spacing: -0.01em;
+  }
+  .section-lead {
+    max-width: 62ch; margin: 0 0 34px;
+    color: var(--ink-soft); font-size: 18px; line-height: 1.6;
+  }
+
+  /* ---------- 1. hero ---------- */
+  .hero {
+    position: relative; isolation: isolate;
+    display: grid; place-items: center;
+    min-height: calc(100vh - 63px);
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero .wrap { position: relative; z-index: 2; }
+
+  /* Real SF tiles behind the hero. Decorative only: no pan, zoom or clicks. */
+  #hero-map {
+    position: absolute; inset: 0; z-index: 0;
+    background: transparent;
+    pointer-events: none;
+  }
+  #hero-map .leaflet-tile-pane {
+    filter: sepia(0.28) saturate(0.72) hue-rotate(-8deg) contrast(1.06);
+    opacity: 1;
+  }
+  #hero-map .leaflet-control-container { display: none; }
+
+  /* Scrim: opaque enough directly behind the headline to keep it readable,
+     then clears fast so the streets are actually visible around it. */
+  .hero::after {
+    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(ellipse 52% 40% at 50% 44%,
+        rgba(255,248,239,0.88) 0%,
+        rgba(255,248,239,0.55) 48%,
+        rgba(255,248,239,0) 100%),
+      linear-gradient(180deg,
+        var(--cream) 0%,
+        rgba(255,248,239,0) 16%,
+        rgba(255,248,239,0) 80%,
+        var(--cream) 100%);
+  }
+
+  .map-credit {
+    position: absolute; z-index: 2; right: 14px; bottom: 10px;
+    color: var(--ink-faint); font-size: 10px; opacity: 0.75;
+  }
+  .hero h1 {
+    max-width: 15ch; margin: 0 auto 26px;
+    font-size: clamp(46px, 7.4vw, 92px); font-weight: 400;
+    line-height: 1.02; letter-spacing: -0.02em;
+  }
+  .hero p {
+    max-width: 60ch; margin: 0 auto 40px;
+    color: var(--ink-soft); font-size: clamp(17px, 1.6vw, 21px); line-height: 1.6;
+  }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 52px; padding: 0 26px; border-radius: 999px;
+    font-size: 16px; cursor: pointer; border: 1px solid transparent;
+    transition: transform 0.12s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--coral), #ef7c5e);
+    color: var(--cream);
+    box-shadow: 0 10px 22px rgba(222, 91, 73, 0.28);
+  }
+  .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-ghost:hover { border-color: var(--teal); background: var(--teal-pale); }
+
+  /* ---------- 2. problem ---------- */
+  .problem { border-top: 1px solid var(--peach-deep); }
+  .fail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+  .fail {
+    display: flex; flex-direction: column;
+    padding: 26px; border: 1px solid var(--line); border-radius: 18px;
+    background: rgba(255, 252, 247, 0.86);
+    box-shadow: var(--shadow-warm);
+  }
+  .fail-tag {
+    align-self: flex-start; margin-bottom: 16px;
+    padding: 4px 11px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .fail-tag.quiet { background: #f0e7db; color: #8a6a4a; }
+  .fail-tag.loud  { background: #fbe4df; color: var(--coral-deep); }
+  .fail-tag.astray{ background: var(--teal-pale); color: #2f6b64; }
+  .fail h3 { margin: 0 0 10px; font-size: 21px; font-weight: 400; line-height: 1.25; }
+  .fail p { margin: 0; color: var(--ink-soft); font-size: 15px; line-height: 1.6; }
+
+  /* ---------- charts ----------
+     Palette validated with the dataviz validator: #de5b49 / #0b8f80 pass
+     lightness, chroma, CVD separation, normal-vision and contrast checks. */
+  .charts {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--gap); margin-top: 34px;
+  }
+  .chart {
+    margin: 0; padding: 26px;
+    border: 1px solid var(--line); border-radius: 18px;
+    background: rgba(255, 252, 247, 0.9);
+    box-shadow: var(--shadow-warm);
+  }
+  .chart figcaption { margin-bottom: 18px; }
+  .chart h3 { margin: 0 0 5px; font-size: 19px; font-weight: 400; line-height: 1.3; }
+  .chart-sub { margin: 0; color: var(--ink-faint); font-size: 13.5px; line-height: 1.5; }
+  .chart-note {
+    margin: 16px 0 0; color: var(--ink-faint); font-size: 13px; line-height: 1.55;
+  }
+
+  .legend { display: flex; gap: 16px; margin-bottom: 16px; font-size: 13px; color: var(--ink-soft); }
+  .legend span { display: flex; align-items: center; gap: 7px; }
+  .sw { width: 11px; height: 11px; border-radius: 3px; }
+
+  .bars { display: grid; gap: 11px; }
+  .row { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; align-items: center; }
+  .row-label { color: var(--ink-soft); font-size: 13.5px; text-align: right; }
+  .track { position: relative; display: flex; height: 30px; }
+  /* 2px surface gap between adjacent fills, 4px rounded outer data-ends */
+  .seg {
+    position: relative; display: flex; align-items: center;
+    min-width: 0; transition: filter 0.12s ease;
+  }
+  .seg span {
+    padding: 0 9px; font-size: 12px; color: #fff; white-space: nowrap;
+  }
+  .seg.yes { background: #0b8f80; border-radius: 4px 0 0 4px; margin-right: 2px; }
+  .seg.no  { background: #de5b49; border-radius: 0 4px 4px 0; justify-content: flex-end; }
+  .seg:hover { filter: brightness(1.08); }
+  .fifty {
+    position: absolute; top: -3px; bottom: -3px; left: 50%;
+    width: 2px; background: var(--ink); opacity: 0.55;
+  }
+
+  .tiles { display: grid; gap: 10px; }
+  .tile {
+    display: flex; align-items: baseline; gap: 14px;
+    padding: 13px 16px; border-radius: 12px;
+    background: rgba(246, 176, 142, 0.1);
+    border: 1px solid rgba(246, 176, 142, 0.4);
+  }
+  .tile-n { min-width: 78px; font-size: 34px; line-height: 1; }
+  .tile-u { margin-left: 3px; font-size: 15px; color: var(--ink-faint); }
+  .tile-l { color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
+  .tile.zero { border-color: rgba(222, 91, 73, 0.45); background: #fff5f2; }
+  .tile.zero .tile-n { color: var(--coral-deep); }
+
+  .data-table { margin-top: 22px; }
+  .data-table summary {
+    cursor: pointer; color: var(--ink-soft); font-size: 14px; padding: 6px 0;
+  }
+  .data-table table { border-collapse: collapse; margin-top: 12px; font-size: 14px; }
+  .data-table th, .data-table td {
+    padding: 7px 20px 7px 0; text-align: left; border-bottom: 1px solid var(--line);
+    color: var(--ink-soft); font-weight: 400;
+  }
+  .data-table th { color: var(--ink-faint); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* ---------- 3. solution ---------- */
+  .solution { border-top: 1px solid var(--peach-deep); }
+  .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
+  .step {
+    padding: 24px; border-radius: 18px;
+    background: rgba(255, 252, 247, 0.86); border: 1px solid var(--line);
+    box-shadow: var(--shadow-warm);
+  }
+  .step-n {
+    display: grid; place-items: center;
+    width: 30px; height: 30px; margin-bottom: 16px;
+    border-radius: 10px; color: var(--cream);
+    background: linear-gradient(135deg, var(--coral), var(--peach));
+    box-shadow: 0 6px 14px rgba(222, 91, 73, 0.24);
+    font-size: 14px;
+  }
+  .step h3 { margin: 0 0 8px; font-size: 18px; font-weight: 400; }
+  .step p { margin: 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; }
+
+  .rule-strip {
+    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px;
+    padding: 18px 22px; border: 1px dashed var(--peach); border-radius: 16px;
+    background: rgba(246, 176, 142, 0.09);
+    color: var(--ink-soft); font-size: 14.5px; line-height: 1.6;
+  }
+  .rule-strip b { color: var(--ink); font-weight: 700; }
+
+  /* ---------- 4. pressing now ---------- */
+  .pressing { border-top: 1px solid var(--peach-deep); }
+  .feed { display: grid; gap: 12px; }
+  .item {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    gap: 20px; align-items: center;
+    padding: 20px 24px; border: 1px solid var(--line); border-radius: 16px;
+    background: rgba(255, 252, 247, 0.86);
+    box-shadow: var(--shadow-warm);
+  }
+  .item.hot {
+    border-color: rgba(222, 91, 73, 0.45);
+    background: linear-gradient(100deg, rgba(255, 236, 228, 0.95), rgba(255, 252, 247, 0.88));
+  }
+  .item-title { font-size: 19px; line-height: 1.3; }
+  .item-meta { margin-top: 7px; color: var(--ink-faint); font-size: 13.5px; }
+  .item-meta span + span::before { content: " · "; }
+  .status {
+    padding: 5px 12px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .status.review { background: #fbe4df; color: var(--coral-deep); }
+  .status.emerging { background: #fdf1e2; color: #a07a4a; }
+  .status.watch { background: var(--teal-pale); color: #2f6b64; }
+  .count { text-align: right; }
+  .count-n { font-size: 30px; line-height: 1; }
+  .count-l { margin-top: 5px; color: var(--ink-faint); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .feed-foot {
+    margin-top: 22px; display: flex; flex-wrap: wrap; gap: 16px;
+    align-items: center; justify-content: space-between;
+  }
+  .mock-flag {
+    color: var(--ink-faint); font-size: 13px; line-height: 1.55;
+  }
+
+  @media (max-width: 900px) {
+    .wrap { padding: 0 20px; }
+    .fail-grid, .steps, .charts { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 70px minmax(0, 1fr); }
+    .item { grid-template-columns: 1fr; }
+    .count { text-align: left; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;padding-top:0;padding-bottom:0">
+    <a class="brand" href="#top"><span class="brand-mark"></span> Quorum</a>
+    <div class="nav-links">
+      <a href="#problem">The problem</a>
+      <a href="#solution">How it works</a>
+      <a href="#pressing">Pressing now</a>
+    </div>
+  </div>
+</nav>
+
+<!-- 1 ─────────────────────────────────────────── -->
+<section class="hero" id="top">
+  <div id="hero-map" aria-hidden="true"></div>
+  <span class="map-credit">© OpenStreetMap contributors © CARTO</span>
+  <div class="wrap">
+    <h1>Make community objections count.</h1>
+    <p>
+      Who decides, what action counts, and where your community's effort should go —
+      especially when the impact zone and the decision zone are not the same place.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#pressing">Analyse a civic action</a>
+      <a class="btn btn-ghost" href="#solution">See how it works</a>
+    </div>
+  </div>
+</section>
+
+<!-- 2 ─────────────────────────────────────────── -->
+<section class="problem" id="problem">
+  <div class="wrap">
+    <h2>Caring is not the missing ingredient.</h2>
+    <p class="section-lead">
+      Civic engagement fails in three ways, and they need opposite fixes.
+    </p>
+
+    <div class="fail-grid">
+      <article class="fail">
+        <span class="fail-tag quiet">Heard too little</span>
+        <h3>It never becomes countable</h3>
+        <p>People hold a position and tell each other. It never reaches the channel that counts, before the deadline.</p>
+      </article>
+
+      <article class="fail">
+        <span class="fail-tag loud">Heard too much</span>
+        <h3>Volume arrives, standing does not</h3>
+        <p>Hundreds of near-identical letters get recognised as bulk and weighed as one. The countable unit is a distinct submitter.</p>
+      </article>
+
+      <article class="fail">
+        <span class="fail-tag astray">Heard by the wrong people</span>
+        <h3>Aimed at the wrong electorate</h3>
+        <p>Well-funded organising, pointed at the people already affected — who already agree — not at whoever decides.</p>
+      </article>
+    </div>
+
+    <div class="charts">
+      <!-- Chart 1 — polarity, so a diverging split bar centred on 50% -->
+      <figure class="chart">
+        <figcaption>
+          <h3>Proposition K — won the westside, lost the city</h3>
+          <p class="chart-sub">Vote share, Nov 2024. The line is 50%.</p>
+        </figcaption>
+
+        <div class="legend">
+          <span><i class="sw" style="background:#0b8f80"></i> Yes</span>
+          <span><i class="sw" style="background:#de5b49"></i> No</span>
+        </div>
+
+        <div class="bars" role="img"
+             aria-label="Prop K vote share: citywide 54.7% yes; Sunset 40% yes; Richmond 30% yes; Districts 1, 4, 7 and 11 combined 39% yes.">
+          <div class="row">
+            <span class="row-label">Citywide</span>
+            <div class="track">
+              <div class="seg yes" style="width:54.73%" title="Yes 54.7%"><span>54.7%</span></div>
+              <div class="seg no"  style="width:45.27%" title="No 45.3%"><span>45.3%</span></div>
+              <div class="fifty" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-label">Sunset</span>
+            <div class="track">
+              <div class="seg yes" style="width:40%" title="Yes 40%"><span>40%</span></div>
+              <div class="seg no"  style="width:60%" title="No 60%"><span>60%</span></div>
+              <div class="fifty" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-label">Richmond</span>
+            <div class="track">
+              <div class="seg yes" style="width:30%" title="Yes 30%"><span>30%</span></div>
+              <div class="seg no"  style="width:70%" title="No 70%"><span>70%</span></div>
+              <div class="fifty" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="row">
+            <span class="row-label">D1·4·7·11</span>
+            <div class="track">
+              <div class="seg yes" style="width:39%" title="Yes 39%"><span>39%</span></div>
+              <div class="seg no"  style="width:61%" title="No 61%"><span>61%</span></div>
+              <div class="fifty" aria-hidden="true"></div>
+            </div>
+          </div>
+        </div>
+        <p class="chart-note">Every westside bar sits left of the line. The one that counted sits right of it.</p>
+      </figure>
+
+      <!-- Chart 2 — a single value against zero is a stat tile, not a bar chart -->
+      <figure class="chart">
+        <figcaption>
+          <h3>Portsmouth Square — opposition vs the record</h3>
+          <p class="chart-sub">What the community held, and what the file held.</p>
+        </figcaption>
+
+        <div class="tiles">
+          <div class="tile">
+            <div class="tile-n">176<span class="tile-u">yrs</span></div>
+            <div class="tile-l">CCBA, opposed and uninvited</div>
+          </div>
+          <div class="tile">
+            <div class="tile-n">150<span class="tile-u">+</span></div>
+            <div class="tile-l">Merchants represented in protest</div>
+          </div>
+          <div class="tile zero">
+            <div class="tile-n">0</div>
+            <div class="tile-l">Communications the D3 supervisor's office received</div>
+          </div>
+        </div>
+        <p class="chart-note">The zero is the whole story.</p>
+      </figure>
+    </div>
+
+    <details class="data-table">
+      <summary>View the underlying numbers</summary>
+      <table>
+        <thead><tr><th>Geography</th><th>Yes</th><th>No</th></tr></thead>
+        <tbody>
+          <tr><td>Citywide</td><td>54.73%</td><td>45.27%</td></tr>
+          <tr><td>Sunset</td><td>~40%</td><td>~60%</td></tr>
+          <tr><td>Richmond</td><td>~30%</td><td>~70%</td></tr>
+          <tr><td>Districts 1, 4, 7, 11</td><td>39%</td><td>61%</td></tr>
+        </tbody>
+      </table>
+      <p class="chart-note">Prop K, Nov 2024. District figures approximate.</p>
+    </details>
+  </div>
+</section>
+
+<!-- 3 ─────────────────────────────────────────── -->
+<section class="solution" id="solution">
+  <div class="wrap">
+    <h2>Quorum puts the whole picture in one place.</h2>
+    <p class="section-lead">Scattered signal in. One countable action out.</p>
+
+    <div class="steps">
+      <article class="step">
+        <div class="step-n">1</div>
+        <h3>Aggregate</h3>
+        <p>311, agendas, press and community records — deduplicated into one issue.</p>
+      </article>
+      <article class="step">
+        <div class="step-n">2</div>
+        <h3>Find who decides</h3>
+        <p>The body that approves it, and who that body answers to.</p>
+      </article>
+      <article class="step">
+        <div class="step-n">3</div>
+        <h3>Retrieve what counts</h3>
+        <p>Channel, format and deadline — each with a source and a date.</p>
+      </article>
+      <article class="step">
+        <div class="step-n">4</div>
+        <h3>Aim it</h3>
+        <p>Impact zone vs decision zone. When they differ, re-aim.</p>
+      </article>
+    </div>
+
+    <div class="rule-strip">
+      <span><b>Retrieved, never generated.</b> No source, no claim — Quorum shows a gap instead of a guess.</span>
+    </div>
+  </div>
+</section>
+
+<!-- 4 ─────────────────────────────────────────── -->
+<section class="pressing" id="pressing">
+  <div class="wrap">
+    <h2>What is building across San Francisco.</h2>
+    <p class="section-lead">Ranked by corroborated signal, not raw volume.</p>
+
+    <div class="feed">
+      <article class="item hot">
+        <div>
+          <div class="item-title">Portsmouth Square — pedestrian bridge removal</div>
+          <div class="item-meta">
+            <span>Chinatown · D3</span><span>4 source types</span><span>+240% this week</span>
+          </div>
+        </div>
+        <div class="count">
+          <div class="count-n">19</div>
+          <div class="count-l">records</div>
+          <div style="margin-top:10px"><span class="status review">Review needed</span></div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div>
+          <div class="item-title">Great Highway follow-up measure — signature gathering</div>
+          <div class="item-meta">
+            <span>Sunset / Richmond · citywide</span><span>3 source types</span><span>rising</span>
+          </div>
+        </div>
+        <div class="count">
+          <div class="count-n">12</div>
+          <div class="count-l">records</div>
+          <div style="margin-top:10px"><span class="status emerging">Emerging</span></div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div>
+          <div class="item-title">Tenderloin SRO habitability complaints</div>
+          <div class="item-meta">
+            <span>Tenderloin · D6</span><span>2 source types</span><span>steady</span>
+          </div>
+        </div>
+        <div class="count">
+          <div class="count-n">8</div>
+          <div class="count-l">records</div>
+          <div style="margin-top:10px"><span class="status emerging">Emerging</span></div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div>
+          <div class="item-title">Mission Street bus lane extension</div>
+          <div class="item-meta">
+            <span>Mission · D9</span><span>2 source types</span><span>steady</span>
+          </div>
+        </div>
+        <div class="count">
+          <div class="count-n">6</div>
+          <div class="count-l">records</div>
+          <div style="margin-top:10px"><span class="status watch">Monitoring</span></div>
+        </div>
+      </article>
+
+      <article class="item">
+        <div>
+          <div class="item-title">Balboa Park station accessibility</div>
+          <div class="item-meta">
+            <span>Excelsior · D11</span><span>1 source type</span><span>new</span>
+          </div>
+        </div>
+        <div class="count">
+          <div class="count-n">3</div>
+          <div class="count-l">records</div>
+          <div style="margin-top:10px"><span class="status watch">Monitoring</span></div>
+        </div>
+      </article>
+    </div>
+
+    <div class="feed-foot">
+      <p class="mock-flag">Mockup — illustrative counts, not live data.</p>
+      <a class="btn btn-primary" href="#top">Analyse a civic action</a>
+    </div>
+  </div>
+</section>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // Decorative backdrop only — every interaction handler is off.
+  const heroMap = L.map("hero-map", {
+    center: [37.7749, -122.4310],
+    zoom: 13,
+    zoomControl: false, dragging: false, scrollWheelZoom: false,
+    doubleClickZoom: false, touchZoom: false, boxZoom: false,
+    keyboard: false, attributionControl: false
+  });
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 19
+  }).addTo(heroMap);
+</script>
+
+</body>
+</html>
