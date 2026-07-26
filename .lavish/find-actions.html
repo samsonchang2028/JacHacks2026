@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quorum — Find Actions (mockup)</title>
+<link rel="stylesheet" href="quorum.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(.grid, .flex) > * { min-width: 0; }
+  :where(p, h1, h2, h3, h4, li, td, th) { overflow-wrap: anywhere; }
+
+  /* One central font: the serif from the page title, used everywhere. */
+  body, button, a, input, .lead, .nav-link, .panel-section, .res-value,
+  .act-what, .org-name, .prec-title, .trace-label, .chip, .map-legend {
+    font-family: Georgia, "Times New Roman", serif;
+  }
+
+  /* Un-boxed: content sits on the page, not inside one big rounded card. */
+  html, body { max-width:100%; overflow-x:hidden; }
+  .page-shell { width:min(1560px,100%); padding:18px 40px 24px; }
+  .app-panel {
+    min-height:0; padding:0;
+    border:0; border-radius:0; background:transparent; box-shadow:none;
+  }
+  .topbar {
+    margin-bottom:26px; padding-bottom:16px;
+    border-bottom:1px solid #eee2d4;
+  }
+
+  /* ---- Find Actions layout ---- */
+  .actions-head { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; flex-wrap:wrap; margin: 4px 0 14px; }
+  .actions-head p.lead { font-size:15px; }
+  .section-title { margin:8px 0 0; font-size:clamp(24px,2.4vw,32px); }
+  .actions-layout {
+    display:grid; grid-template-columns: minmax(0,1fr) minmax(0,400px); gap:20px;
+    align-items:stretch;
+    height: clamp(380px, calc(100vh - 300px), 660px);
+  }
+
+  /* ---- Map ---- */
+  .map-frame {
+    position:relative; height:100%; overflow:hidden;
+    border:2px solid rgba(22,63,70,.14); border-radius:28px;
+    background:linear-gradient(160deg, rgba(232,246,244,.5), rgba(255,255,255,.9));
+    box-shadow:0 18px 40px rgba(83,55,37,.10);
+  }
+  #map { position:absolute; inset:0; background:transparent; }
+  #map .leaflet-tile-pane { filter: sepia(.34) saturate(.78) hue-rotate(-8deg) brightness(1.04) contrast(.94); }
+  #map .leaflet-control-attribution { font-size:9px; background:rgba(255,248,239,.82); color:rgba(22,63,70,.55); }
+
+  .map-legend {
+    position:absolute; z-index:500; left:16px; bottom:16px;
+    display:flex; flex-direction:column; gap:8px;
+    padding:12px 14px; border-radius:16px;
+    border:1px solid #eaded2; background:rgba(255,252,247,.94);
+    box-shadow:0 10px 24px rgba(83,55,37,.10);
+    font-size:12px; font-weight:750; color:#435757;
+  }
+  .map-legend span { display:flex; align-items:center; gap:9px; }
+  .legend-dot { width:14px; height:14px; border-radius:50%; flex:none; }
+  .legend-dot.full { background:#de5b49; box-shadow:0 0 0 3px rgba(222,91,73,.22); }
+  .legend-dot.thin { background:#fff; border:2.5px solid #6fb9bd; }
+
+  /* pins (divIcon) */
+  .q-pin { display:block; border-radius:50%; }
+  .q-pin.full { width:22px; height:22px; background:#de5b49; border:3px solid #fff8ef; box-shadow:0 3px 10px rgba(83,55,37,.35), 0 0 0 4px rgba(222,91,73,.20); }
+  .q-pin.thin { width:15px; height:15px; background:#fff8ef; border:3px solid #6fb9bd; box-shadow:0 2px 7px rgba(83,55,37,.25); }
+  .q-pin.selected { transform:scale(1.28); }
+
+  /* ---- Side panel ---- */
+  .issue-panel {
+    display:flex; flex-direction:column; height:100%; min-height:0;
+    border:1px solid #eaded2; border-radius:24px; overflow:hidden;
+    background:rgba(255,252,247,.97);
+    box-shadow:0 18px 45px rgba(83,55,37,.12);
+  }
+  .panel-head { flex:none; padding:20px 22px 16px; border-bottom:1px solid #f0e5d9; background:#fffcf7; }
+  .panel-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:4px 22px 20px; }
+  .panel-foot { flex:none; padding:14px 22px; border-top:1px solid #f0e5d9; background:#fffcf7; }
+
+  .panel-district { font-size:11px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; color:#8a7b6d; }
+  .panel-title { margin:6px 0 0; font-family:Georgia,"Times New Roman",serif; font-size:26px; line-height:1.12; color:#173f45; }
+
+  .panel-section { padding:18px 0; border-bottom:1px dashed #ece0d3; }
+  .panel-section:last-child { border-bottom:0; }
+  .panel-section h3 {
+    margin:0 0 10px; font-size:11px; font-weight:900; letter-spacing:.09em;
+    text-transform:uppercase; color:#8a7b6d;
+  }
+  .panel-section p { margin:0; font-size:14px; line-height:1.6; color:#435757; }
+
+  /* ---- nav ---- */
+  .nav-labels {
+    gap:4px; padding:4px; border-radius:999px;
+    border:1px solid #eee2d4; background:rgba(255,252,247,.9);
+  }
+  .nav-link {
+    padding:8px 15px; border-radius:999px; border-bottom:0;
+    font-size:13.5px; font-weight:800; color:#6c7a7a; white-space:nowrap;
+  }
+  .nav-link:hover { color:#173f45; background:rgba(139,211,215,.16); }
+  .nav-link.active { color:#fff8ef; background:#173f45; border-bottom:0; }
+  .nav-link.active:hover { background:#173f45; }
+
+  /* ---- inline citations ---- */
+  .cite {
+    padding:0 1px; font-size:9.5px; font-weight:900; color:#c2503b;
+    vertical-align:super; line-height:0; cursor:help;
+  }
+  .cite:hover { color:#8a3323; }
+
+  .sources {
+    margin-top:12px; padding:11px 13px; border-radius:12px;
+    border:1px solid #f0e5d9; background:#fdfaf5;
+  }
+  .sources h4 {
+    margin:0 0 7px; font-size:9.5px; font-weight:900; letter-spacing:.09em;
+    text-transform:uppercase; color:#a3937f;
+  }
+  .sources ol { margin:0; padding-left:16px; }
+  .sources li { font-size:11.5px; line-height:1.55; color:#7d6c5c; }
+  .sources li + li { margin-top:4px; }
+  .sources .src-date { color:#a3937f; }
+
+  /* divergence banner */
+  .divergence {
+    margin:16px 0 0; padding:14px 16px; border-radius:16px;
+    border:1.5px solid rgba(222,91,73,.45); background:rgba(222,91,73,.09);
+  }
+  .divergence strong { display:block; font-size:13px; color:#b8402c; margin-bottom:6px; }
+  .divergence p { font-size:13px; line-height:1.55; color:#7d4436; }
+  .divergence .zones { display:flex; gap:10px; margin-top:10px; font-size:11px; font-weight:800; flex-wrap:wrap; }
+  .divergence .zones span { padding:4px 9px; border-radius:999px; background:rgba(255,255,255,.75); color:#8a4433; }
+
+  /* organizers */
+  .org { display:flex; gap:11px; padding:9px 0; }
+  .org:not(:last-child) { border-bottom:1px solid #f4ebe0; }
+  .org-avatar {
+    flex:none; width:34px; height:34px; border-radius:11px;
+    background:linear-gradient(135deg,#8bd3d7,#cfeeee);
+    display:grid; place-items:center; font-size:12px; font-weight:900; color:#17565c;
+  }
+  .org-name { font-size:13.5px; font-weight:850; color:#173f45; }
+  .org-role { font-size:12px; color:#6c7a7a; line-height:1.45; }
+  .lang-tag { display:inline-block; margin-left:6px; padding:1px 7px; border-radius:999px; background:#f0e7db; font-size:10px; font-weight:800; color:#8a7b6d; }
+
+  /* resources */
+  .res { padding:11px 0; }
+  .res:not(:last-child) { border-bottom:1px solid #f4ebe0; }
+  .res-label { font-size:11px; font-weight:800; color:#8a7b6d; text-transform:uppercase; letter-spacing:.05em; }
+  .res-value { margin-top:3px; font-size:14px; font-weight:750; color:#173f45; line-height:1.45; }
+  .chip {
+    display:inline-flex; align-items:center; gap:5px; margin-top:7px;
+    padding:3px 9px; border-radius:999px; border:1px solid #dcebe6;
+    background:#f2f9f6; font-size:10.5px; font-weight:800; color:#3f7a72;
+  }
+  .chip::before { content:"⛓"; font-size:9px; }
+  .chip.gap { border-color:#efdcc9; background:#fdf4e9; color:#a07a4a; }
+  .chip.gap::before { content:"○"; }
+
+  /* precedent */
+  .prec { padding:12px 0; }
+  .prec:not(:last-child) { border-bottom:1px solid #f4ebe0; }
+  .prec-title { font-size:13.5px; font-weight:850; color:#173f45; }
+  .prec-meta { margin-top:5px; font-size:12px; color:#6c7a7a; line-height:1.5; }
+  .prec-meta b { color:#435757; font-weight:800; }
+  .outcome { display:inline-block; margin-top:6px; padding:2px 9px; border-radius:999px; font-size:10.5px; font-weight:850; }
+  .outcome.win { background:#e6f4ec; color:#2f6b4c; }
+  .outcome.loss { background:#f9e7e3; color:#a3503c; }
+
+  /* actions */
+  .act { display:flex; gap:12px; padding:12px 0; }
+  .act:not(:last-child) { border-bottom:1px solid #f4ebe0; }
+  .act-rank {
+    flex:none; width:24px; height:24px; border-radius:8px; background:#de5b49; color:#fff8ef;
+    display:grid; place-items:center; font-size:12px; font-weight:900;
+  }
+  .act-what { font-size:13.5px; font-weight:800; color:#173f45; line-height:1.4; }
+  .act-how { margin-top:4px; font-size:12px; color:#6c7a7a; line-height:1.5; }
+
+  .full-workup {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; min-height:46px; border-radius:999px; border:0;
+    background:#de5b49; color:#fff8ef; font-size:14px; font-weight:850; cursor:pointer;
+  }
+
+  .mock-note {
+    margin:14px 0 0; padding:10px 16px; border-radius:14px;
+    border:1px dashed #d9c3ae; background:rgba(255,245,232,.7);
+    font-size:11.5px; line-height:1.5; color:#7d6c5c;
+  }
+  .mock-note b { color:#8a4433; }
+
+  /* ---- lean panel ---- */
+  .summary { font-size:16px; line-height:1.5; color:#173f45; }
+
+  .kv-row { display:flex; gap:14px; padding:8px 0; align-items:baseline; }
+  .kv-row + .kv-row { border-top:1px solid #f4ebe0; }
+  .kv-label {
+    flex:none; width:88px; color:#8a7b6d; font-size:11px; font-weight:900;
+    letter-spacing:.06em; text-transform:uppercase;
+  }
+  .kv-value { color:#173f45; font-size:14px; line-height:1.45; }
+
+  .org-chips { display:flex; flex-wrap:wrap; gap:7px; }
+  .org-chip {
+    padding:5px 11px; border-radius:999px; border:1px solid #dcebe6;
+    background:#f2f9f6; color:#2f6b64; font-size:12.5px; font-weight:700;
+  }
+
+  .panel-section .act { padding:9px 0; align-items:flex-start; }
+  .panel-section .act-what { font-size:14px; font-weight:700; }
+
+  .divergence .zones { margin-top:0; }
+
+  /* ---- full workup page ---- */
+  .workup { max-width:820px; margin:0 auto; padding:2px 0 20px; }
+  .back-link { display:inline-block; margin-bottom:12px; color:#6c7a7a; font-size:13px; font-weight:800; cursor:pointer; }
+  .back-link:hover { color:#173f45; }
+  .workup-head { margin-bottom:4px; }
+
+  .trace { margin:12px 0 0; padding:0; list-style:none; }
+  .trace li {
+    display:flex; flex-wrap:wrap; align-items:center; gap:10px;
+    margin-left:6px; padding:9px 0 9px 18px; border-left:2px solid #cfe6e4;
+  }
+  .trace-edge {
+    padding:2px 9px; border-radius:999px; color:#3f7a72; background:#eaf5f1;
+    font-family:ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size:10.5px; font-weight:800;
+  }
+  .trace-kind { color:#8a7b6d; font-size:11px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; }
+  .trace-label { color:#173f45; font-size:13px; font-weight:750; }
+
+  @media (max-width: 1180px) {
+    .actions-layout { grid-template-columns: 1fr; height:auto; }
+    .map-frame { height:400px; }
+    .issue-panel { height:auto; max-height:560px; }
+  }
+</style>
+</head>
+<body>
+<main class="page-shell">
+  <section class="app-panel">
+
+    <nav class="topbar" aria-label="Primary navigation">
+      <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"></span><strong>Quorum</strong></a>
+      <div class="nav-labels">
+        <a class="nav-link" href="#">Home</a>
+        <a class="nav-link active" href="#">Find Actions</a>
+        <a class="nav-link" href="#">How it works</a>
+      </div>
+    </nav>
+
+    <div class="actions-head">
+      <h2 class="section-title">Open issues across San Francisco</h2>
+      <p class="lead">Click a pin. Coral pins have a full procedural record.</p>
+    </div>
+
+    <div class="actions-layout" id="view-map">
+      <div class="map-frame">
+        <div id="map"></div>
+        <div class="map-legend">
+          <span><i class="legend-dot full"></i> Full workup</span>
+          <span><i class="legend-dot thin"></i> Seeded from 311 / Legistar</span>
+        </div>
+      </div>
+
+      <aside class="issue-panel">
+        <div class="panel-head">
+          <div class="panel-district" id="p-district">Chinatown · District 3</div>
+          <h3 class="panel-title" id="p-title">Portsmouth Square renovation</h3>
+        </div>
+
+        <div class="panel-body" id="p-body"></div>
+
+        <div class="panel-foot">
+          <button class="full-workup" id="btn-workup">Open full workup →</button>
+        </div>
+      </aside>
+    </div>
+
+    <div class="workup" id="view-workup" style="display:none">
+      <a class="back-link" id="btn-back">← Back to the map</a>
+      <div class="workup-head">
+        <p class="panel-district" id="w-district"></p>
+        <h2 class="section-title" id="w-title"></h2>
+      </div>
+      <div id="w-body"></div>
+    </div>
+
+    <p class="mock-note">
+      <b>Mockup mirroring the built app.</b> Click the Prop K pin (west side) to see the divergence
+      banner fire, then <b>Open full workup</b> for the detail page including the graph traversal panel.
+      Content matches what the real walkers return — three cited rows and exactly one deliberate
+      "no record retrieved" gap on the deadline. Annotate anything: layout, density, wording, colour.
+    </p>
+
+  </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const ISSUES = {
+  portsmouth: {
+    ll: [37.7947, -122.4058], tier: "full",
+    district: "Chinatown · District 3",
+    title: "Portsmouth Square renovation",
+    short: "A historic pedestrian bridge is being demolished. The opposition is organized — but the supervisor's office has no record of it.",
+    divergence: null,
+    problem: "A $73M renovation broke ground in June 2026, closing the park for roughly two years.<sup class='cite' title='SF Rec &amp; Park — Portsmouth Square Improvement Project'>[1]</sup> The renovation is broadly supported; the contested piece is the removal of the historic pedestrian bridge over Kearny Street, demolished to make room for a larger two-story clubhouse.<sup class='cite' title='News coverage of the Kearny St bridge demolition'>[2]</sup> Opposition exists and is organized — but District 3 Supervisor Danny Sauter said he was unaware of opposition to the bridge removal, and that his office had received no communication in support of keeping it.<sup class='cite' title='Quoted statement, D3 supervisor'>[3]</sup> City survey data reportedly showed 77% of residents supported the demolition — the argument here is about process, not unanimity.<sup class='cite' title='City survey data, cited in coverage'>[4]</sup>",
+    srcs: [
+      "SF Recreation &amp; Park — Portsmouth Square Improvement Project record",
+      "Local news coverage — Kearny Street pedestrian bridge demolition",
+      "Supervisor Danny Sauter (D3) — quoted statement on constituent input",
+      "City survey data on the bridge demolition, as cited in coverage"
+    ],
+    organizers: [
+      { i:"CC", n:"CCBA", r:"176-year-old association representing Chinatown's family associations. Says it was never invited to project meetings.", lang:"中文 / EN" },
+      { i:"TN", n:"Thomas Ng", r:"CCBA board member of five decades. Opposes the bridge removal; says he never heard the plan from city officials.", lang:"中文" },
+      { i:"MU", n:"Merchants United Association", r:"Ed Siu — represents 150+ merchants. Protested the removal and the three simultaneous Chinatown construction projects.", lang:"中文 / EN" }
+    ],
+    resources: [
+      { l:"Who decides", v:"SF Recreation and Park Commission", c:"sfrecpark.org · retrieved 2026-07-26" },
+      { l:"Accountable to", v:"Mayor-appointed; District 3 supervisor's office fields constituent input", c:"sfrecpark.org · retrieved 2026-07-26" },
+      { l:"Channel that counts", v:"Commission general public comment — written to the Commission Secretary, or in person at a regular meeting", c:"sfrecpark.org · retrieved 2026-07-26" },
+      { l:"Next comment deadline", v:"No record retrieved", c:null }
+    ],
+    path: [
+      { via:"root", kind:"Issue", label:"Portsmouth Square renovation" },
+      { via:"decided_by", kind:"DecisionBody", label:"SF Recreation and Park Commission" },
+      { via:"accountable_to", kind:"GeoZone", label:"Chinatown / District 3" },
+      { via:"accepts_input_via", kind:"CommentChannel", label:"Commission general public comment" },
+      { via:"has_deadline", kind:"Deadline", label:"Next comment deadline" },
+      { via:"impacts", kind:"GeoZone", label:"Chinatown / District 3" },
+      { via:"analogous_to", kind:"PrecedentCase", label:"2 matched" }
+    ],
+    precedents: [
+      { t:"Prop K / Great Highway", m:"<b>Channel:</b> CEQA challenge + citywide campaign. <b>Moved:</b> lost at trial, recall of the district supervisor succeeded.", o:"loss" },
+      { t:"Chinatown Central Subway community review", m:"<b>Channel:</b> in-language written comment at commission hearings. <b>Moved:</b> design amendments adopted.", o:"win" }
+    ],
+    actions: [
+      { r:"1", w:"Submit written comment to the Rec & Park Commission Secretary", h:"The countable unit is a distinct submitter, not a distinct email. Ask people to write in their own words — staff discount bulk-generated comment." },
+      { r:"2", w:"Register CCBA speakers for general public comment", h:"An association of record speaking on the record is worth more than volume. Bring the in-language speakers." },
+      { r:"3", w:"Request the D3 supervisor's office log the position formally", h:"The supervisor said he received no communication. Fixing that gap is the whole objective." }
+    ]
+  },
+  propk: {
+    ll: [37.7597, -122.5107], tier: "full",
+    district: "Sunset / Richmond · Citywide measure",
+    title: "Proposition K — Great Highway",
+    short: "The westside lost its own districts by 60–70 points and still lost the vote. The deciding audience was the rest of the city.",
+    divergence: {
+      impact: "Sunset / Richmond",
+      decision: "Citywide electorate (350,000+ voters)",
+      text: "The impact zone and the decision zone are different graphs. Organized opposition never went east of West Portal — but the persuadable audience was the whole city. Outreach aimed at the impact zone reaches people who already agree."
+    },
+    problem: "Prop K passed citywide with 54.73% in November 2024, closing the Great Highway to cars.<sup class='cite' title='SF Department of Elections — Nov 2024 certified results'>[1]</sup> It lost roughly 60–40 in the Sunset and 70–30 in the Richmond; across Districts 1, 4, 7 and 11 the split was about 61% no to 39% yes.<sup class='cite' title='District-level returns, Nov 2024'>[2]</sup> One opponent spent $269,000 against the measure.<sup class='cite' title='Campaign finance filings'>[3]</sup> They filed a CEQA challenge, lost, and appealed to the First Appellate District.<sup class='cite' title='First Appellate District — CEQA appeal'>[4]</sup> The opposition was well funded and well organized — and aimed almost entirely at the districts that already agreed with it.",
+    srcs: [
+      "SF Department of Elections — November 2024 certified results",
+      "District-level returns, November 2024 general election",
+      "Campaign finance filings — opposition committee spending",
+      "First Appellate District — CEQA challenge and appeal record"
+    ],
+    organizers: [
+      { i:"OP", n:"Open the Great Highway", r:"Westside opposition campaign. One opponent spent $269,000 against the measure.", lang:"EN" },
+      { i:"AP", n:"CEQA appellants", r:"Filed a challenge, lost, appealed to the First Appellate District. Court held a minority of supervisors placing a measure on the ballot are not a public agency.", lang:"EN" },
+      { i:"RC", n:"Recall organizers", r:"Campaign prompted the successful recall of Supervisor Engardio. Now gathering signatures for a follow-up measure.", lang:"EN" }
+    ],
+    resources: [
+      { l:"Who decides", v:"Citywide electorate — ballot measure", c:"sfelections.org · retrieved 2026-07-26" },
+      { l:"Accountable to", v:"All 11 districts, not the impact zone", c:"sfelections.org · retrieved 2026-07-26" },
+      { l:"Channel that counts", v:"Signature gathering, then citywide persuasion — not district comment", c:"sfelections.org · retrieved 2026-07-26" },
+      { l:"Signature threshold and filing date", v:"No record retrieved", c:null }
+    ],
+    path: [
+      { via:"root", kind:"Issue", label:"Proposition K — Great Highway" },
+      { via:"decided_by", kind:"DecisionBody", label:"Citywide electorate — ballot measure" },
+      { via:"accountable_to", kind:"GeoZone", label:"Citywide electorate" },
+      { via:"accepts_input_via", kind:"CommentChannel", label:"Signature gathering, then citywide persuasion" },
+      { via:"has_deadline", kind:"Deadline", label:"Signature threshold and filing date" },
+      { via:"impacts", kind:"GeoZone", label:"Sunset / Richmond" },
+      { via:"analogous_to", kind:"PrecedentCase", label:"2 matched" }
+    ],
+    precedents: [
+      { t:"Prop K first campaign (2024)", m:"<b>Channel:</b> district-concentrated outreach + litigation. <b>Moved:</b> won its own districts 60–70 points and still lost citywide.", o:"loss" },
+      { t:"Portsmouth Square", m:"<b>Channel:</b> commission public comment. <b>Moved:</b> pending — different divergence type (channel, not electorate).", o:"win" }
+    ],
+    actions: [
+      { r:"1", w:"Retarget persuasion to Districts 5, 6, 8, 9 — not the westside", h:"The westside is already convinced. Every dollar spent there is a dollar not spent on the deciding constituency." },
+      { r:"2", w:"Lead with local traffic impact, not park opposition", h:"Eastside voters heard 'a new park' and little else. That information gap is the persuadable surface." },
+      { r:"3", w:"Check FPPC and SF Ethics disclosure before any spend", h:"Ballot-measure spending triggers disclosure obligations; issue ads need platform authorization and disclaimers." }
+    ]
+  }
+};
+
+const THIN = [
+  { ll:[37.7699,-122.4269], t:"Panhandle bike lane redesign", d:"Haight Ashbury · D5" },
+  { ll:[37.7841,-122.4078], t:"Tenderloin SRO habitability cases", d:"Tenderloin · D6" },
+  { ll:[37.7509,-122.4184], t:"Mission St bus lane extension", d:"Mission · D9" },
+  { ll:[37.7350,-122.4340], t:"Balboa Park station access", d:"Excelsior · D11" },
+  { ll:[37.8020,-122.4190], t:"North Beach parking removal", d:"North Beach · D3" },
+  { ll:[37.7280,-122.4750], t:"Lake Merced shoreline erosion", d:"Lakeshore · D7" },
+  { ll:[37.7440,-122.3900], t:"Bayview industrial rezoning", d:"Bayview · D10" }
+];
+
+const map = L.map("map", {
+  center: [37.7749, -122.4394], zoom: 12.4, zoomControl: false,
+  scrollWheelZoom: false, attributionControl: true
+});
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution: "&copy; OpenStreetMap contributors &copy; CARTO", maxZoom: 19
+}).addTo(map);
+
+function icon(tier, sel) {
+  const size = tier === "full" ? 22 : 15;
+  return L.divIcon({
+    className: "", html: `<i class="q-pin ${tier}${sel ? " selected" : ""}"></i>`,
+    iconSize: [size, size], iconAnchor: [size/2, size/2]
+  });
+}
+
+let markers = {};
+function select(key) {
+  for (const k in markers) markers[k].setIcon(icon(markers[k]._tier, k === key));
+  render(ISSUES[key]);
+}
+
+for (const key in ISSUES) {
+  const m = L.marker(ISSUES[key].ll, { icon: icon("full", key === "portsmouth") }).addTo(map);
+  m._tier = "full";
+  m.on("click", () => select(key));
+  markers[key] = m;
+}
+THIN.forEach((t, i) => {
+  const m = L.marker(t.ll, { icon: icon("thin", false) }).addTo(map);
+  m._tier = "thin";
+  m.bindTooltip(`${t.t} — no procedural record retrieved yet`, { direction:"top" });
+  markers["thin"+i] = m;
+});
+
+// The panel answers three questions, nothing else. Everything long -- the full
+// brief, sources, organizer bios, precedent detail -- lives on the workup page.
+function render(d) {
+  document.getElementById("p-district").textContent = d.district;
+  document.getElementById("p-title").textContent = d.title;
+
+  const div = d.divergence ? `
+    <div class="divergence">
+      <strong>⚠ Your effort is aimed at the wrong people</strong>
+      <div class="zones">
+        <span>Impact: ${d.divergence.impact}</span>
+        <span>Decides: ${d.divergence.decision}</span>
+      </div>
+    </div>` : "";
+
+  const decides = d.resources[0];
+  const due = d.resources[d.resources.length - 1];
+
+  document.getElementById("p-body").innerHTML = div + `
+    <div class="panel-section">
+      <p class="summary">${d.short}</p>
+    </div>
+
+    <div class="panel-section">
+      <div class="kv">
+        <div class="kv-row">
+          <span class="kv-label">Decides</span>
+          <span class="kv-value">${decides.v}</span>
+        </div>
+        <div class="kv-row">
+          <span class="kv-label">${due.l}</span>
+          <span class="kv-value">
+            ${due.c ? due.v : `<span class="chip gap">no record retrieved</span>`}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3>How to help</h3>
+      ${d.actions.map(a => `
+        <div class="act">
+          <div class="act-rank">${a.r}</div>
+          <div class="act-what">${a.w}</div>
+        </div>`).join("")}
+    </div>
+
+    <div class="panel-section">
+      <h3>Already organizing</h3>
+      <div class="org-chips">
+        ${d.organizers.map(o => `<span class="org-chip">${o.n}</span>`).join("")}
+      </div>
+    </div>`;
+}
+
+// ---- full workup view ----------------------------------------------------
+let current = ISSUES.portsmouth;
+const origRender = render;
+render = function (d) { current = d; origRender(d); };
+
+function sections(d, compact) {
+  return `
+    <div class="panel-section">
+      <h3>The problem</h3>
+      <p>${d.problem}</p>
+      <div class="sources">
+        <h4>Sources — hover a marker to see it inline</h4>
+        <ol>${d.srcs.map(s => `<li>${s} <span class="src-date">· retrieved 2026-07-26</span></li>`).join("")}</ol>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3>Organizers already working on this</h3>
+      ${d.organizers.map(o => `
+        <div class="org">
+          <div class="org-avatar">${o.i}</div>
+          <div>
+            <div class="org-name">${o.n}<span class="lang-tag">${o.lang}</span></div>
+            <div class="org-role">${o.r}</div>
+          </div>
+        </div>`).join("")}
+    </div>
+
+    <div class="panel-section">
+      <h3>Resources — what actually counts</h3>
+      ${d.resources.map(r => `
+        <div class="res">
+          <div class="res-label">${r.l}</div>
+          <div class="res-value">${r.v}</div>
+          ${r.c ? `<span class="chip">${r.c}</span>` : `<span class="chip gap">no record retrieved — not generated</span>`}
+        </div>`).join("")}
+    </div>
+
+    <div class="panel-section">
+      <h3>Precedent cases</h3>
+      ${d.precedents.map(p => `
+        <div class="prec">
+          <div class="prec-title">${p.t}</div>
+          <div class="prec-meta">${p.m}</div>
+          <span class="outcome ${p.o}">${p.o === "win" ? "moved the outcome" : "did not move it"}</span>
+        </div>`).join("")}
+    </div>
+
+    <div class="panel-section">
+      <h3>Suggested actions</h3>
+      ${d.actions.map(a => `
+        <div class="act">
+          <div class="act-rank">${a.r}</div>
+          <div>
+            <div class="act-what">${a.w}</div>
+            <div class="act-how">${a.h}</div>
+          </div>
+        </div>`).join("")}
+    </div>`;
+}
+
+function renderWorkup(d) {
+  document.getElementById("w-district").textContent = d.district;
+  document.getElementById("w-title").textContent = d.title;
+
+  const div = d.divergence ? `
+    <div class="divergence">
+      <strong>⚠ Divergence — impact zone is not the decision zone</strong>
+      <p>${d.divergence.text}</p>
+      <div class="zones">
+        <span>Impact: ${d.divergence.impact}</span>
+        <span>Decision: ${d.divergence.decision}</span>
+      </div>
+    </div>` : "";
+
+  document.getElementById("w-body").innerHTML = div + sections(d, false) + `
+    <div class="panel-section">
+      <h3>Graph traversal — how this answer was reached</h3>
+      <p style="color:#8a7b6d">
+        Each hop is a node the walker actually visited. The divergence answer lives
+        in no single node: it is the comparison of two terminal zones reached by two
+        different edges (<b>accountable_to</b> vs <b>impacts</b>).
+      </p>
+      <ol class="trace">
+        ${d.path.map(p => `
+          <li>
+            <span class="trace-edge">${p.via}</span>
+            <span class="trace-kind">${p.kind}</span>
+            <span class="trace-label">${p.label}</span>
+          </li>`).join("")}
+      </ol>
+    </div>`;
+}
+
+document.getElementById("btn-workup").onclick = () => {
+  renderWorkup(current);
+  document.getElementById("view-map").style.display = "none";
+  document.getElementById("view-workup").style.display = "block";
+};
+document.getElementById("btn-back").onclick = () => {
+  document.getElementById("view-workup").style.display = "none";
+  document.getElementById("view-map").style.display = "grid";
+};
+
+render(ISSUES.portsmouth);
+</script>
+</body>
+</html>

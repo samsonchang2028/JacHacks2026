@@ -1,0 +1,670 @@
+/* Find Actions page, issue panel, shared sections, and the full workup page.
+   Palette and card treatment come from quorum.css -- this file only adds. */
+
+.actions-shell {
+  padding: 4px 0 0;
+}
+
+.actions-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  margin: 4px 0 14px;
+}
+
+.actions-head .lead {
+  font-size: 15px;
+}
+
+.actions-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+  gap: 20px;
+  align-items: stretch;
+  height: clamp(380px, calc(100vh - 320px), 660px);
+}
+
+/* ---------------------------------------------------------------- map */
+
+.map-frame {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border: 2px solid rgba(22, 63, 70, 0.14);
+  border-radius: 28px;
+  background: linear-gradient(160deg, rgba(232, 246, 244, 0.5), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 18px 40px rgba(83, 55, 37, 0.1);
+}
+
+.issue-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* transparent so the frame gradient shows through if tiles fail to load */
+  background: transparent;
+}
+
+.issue-map .leaflet-tile-pane {
+  filter: sepia(0.34) saturate(0.78) hue-rotate(-8deg) brightness(1.04) contrast(0.94);
+}
+
+.issue-map .leaflet-control-attribution {
+  color: rgba(22, 63, 70, 0.55);
+  background: rgba(255, 248, 239, 0.82);
+  font-size: 9px;
+}
+
+.map-legend {
+  position: absolute;
+  z-index: 500;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid #eaded2;
+  border-radius: 16px;
+  color: #435757;
+  background: rgba(255, 252, 247, 0.94);
+  box-shadow: 0 10px 24px rgba(83, 55, 37, 0.1);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.legend-dot {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+
+.legend-dot.full {
+  background: #de5b49;
+  box-shadow: 0 0 0 3px rgba(222, 91, 73, 0.22);
+}
+
+.legend-dot.thin {
+  border: 2.5px solid #6fb9bd;
+  background: #fff;
+}
+
+/* divIcon pins are CSS, so no bundler-broken marker images */
+.q-pin {
+  display: block;
+  border-radius: 50%;
+  transition: transform 0.12s ease;
+}
+
+.q-pin.full {
+  width: 22px;
+  height: 22px;
+  border: 3px solid #fff8ef;
+  background: #de5b49;
+  box-shadow: 0 3px 10px rgba(83, 55, 37, 0.35), 0 0 0 4px rgba(222, 91, 73, 0.2);
+}
+
+.q-pin.thin {
+  width: 15px;
+  height: 15px;
+  border: 3px solid #6fb9bd;
+  background: #fff8ef;
+  box-shadow: 0 2px 7px rgba(83, 55, 37, 0.25);
+}
+
+.q-pin.selected {
+  transform: scale(1.28);
+}
+
+/* -------------------------------------------------------- side panel */
+
+.issue-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #eaded2;
+  border-radius: 24px;
+  background: rgba(255, 252, 247, 0.97);
+  box-shadow: 0 18px 45px rgba(83, 55, 37, 0.12);
+}
+
+.panel-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 30px;
+  color: #8a7b6d;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.panel-loading {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 30px;
+  color: #435757;
+  background: rgba(255, 252, 247, 0.88);
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.panel-loading p {
+  margin: 0;
+}
+
+.panel-loading::before {
+  display: block;
+  width: 28px;
+  height: 28px;
+  margin: 0 auto 14px;
+  border: 3px solid rgba(22, 63, 70, 0.12);
+  border-top-color: #de5b49;
+  border-radius: 50%;
+  animation: panel-spin 0.8s linear infinite;
+  content: "";
+}
+
+@keyframes panel-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.panel-head {
+  flex: none;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid #f0e5d9;
+  background: #fffcf7;
+}
+
+.panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 22px 20px;
+}
+
+.panel-foot {
+  flex: none;
+  padding: 14px 22px;
+  border-top: 1px solid #f0e5d9;
+  background: #fffcf7;
+}
+
+.panel-district {
+  color: #8a7b6d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.panel-title {
+  margin: 6px 0 0;
+  color: #173f45;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  line-height: 1.12;
+}
+
+.full-workup {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 46px;
+  border-radius: 999px;
+  color: #fff8ef;
+  background: #de5b49;
+  font-size: 14px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+/* ------------------------------- sections (panel + workup page share) */
+
+.panel-section {
+  padding: 18px 0;
+  border-bottom: 1px dashed #ece0d3;
+}
+
+.panel-section:last-child {
+  border-bottom: 0;
+}
+
+.panel-section h3 {
+  margin: 0 0 10px;
+  color: #8a7b6d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.panel-section p {
+  margin: 0;
+  color: #435757;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.panel-section p.muted {
+  color: #8a7b6d;
+}
+
+.divergence {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 1.5px solid rgba(222, 91, 73, 0.45);
+  border-radius: 16px;
+  background: rgba(222, 91, 73, 0.09);
+}
+
+.divergence strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #b8402c;
+  font-size: 13px;
+}
+
+.divergence p {
+  color: #7d4436;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.divergence .zones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.divergence .zones span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  color: #8a4433;
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.sources {
+  margin-top: 12px;
+  padding: 11px 13px;
+  border: 1px solid #f0e5d9;
+  border-radius: 12px;
+  background: #fdfaf5;
+}
+
+.sources h4 {
+  margin: 0 0 7px;
+  color: #a3937f;
+  font-size: 9.5px;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.sources ol {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.sources li {
+  color: #7d6c5c;
+  font-size: 11.5px;
+  line-height: 1.55;
+}
+
+.sources li + li {
+  margin-top: 4px;
+}
+
+.src-date {
+  color: #a3937f;
+}
+
+.org {
+  display: flex;
+  gap: 11px;
+  padding: 9px 0;
+}
+
+.org:not(:last-child) {
+  border-bottom: 1px solid #f4ebe0;
+}
+
+.org-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  color: #17565c;
+  background: linear-gradient(135deg, #8bd3d7, #cfeeee);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.org-name {
+  color: #173f45;
+  font-size: 13.5px;
+  font-weight: 850;
+}
+
+.org-role {
+  color: #6c7a7a;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.lang-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: #8a7b6d;
+  background: #f0e7db;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.res {
+  padding: 11px 0;
+}
+
+.res:not(:last-child) {
+  border-bottom: 1px solid #f4ebe0;
+}
+
+.res-label {
+  color: #8a7b6d;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.res-value {
+  margin-top: 3px;
+  color: #173f45;
+  font-size: 14px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 7px;
+  padding: 3px 9px;
+  border: 1px solid #dcebe6;
+  border-radius: 999px;
+  color: #3f7a72;
+  background: #f2f9f6;
+  font-size: 10.5px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+/* A fact with no source renders as a deliberate gap, never a guess. */
+.chip.gap {
+  border-color: #efdcc9;
+  color: #a07a4a;
+  background: #fdf4e9;
+}
+
+.prec {
+  padding: 12px 0;
+}
+
+.prec:not(:last-child) {
+  border-bottom: 1px solid #f4ebe0;
+}
+
+.prec-title {
+  color: #173f45;
+  font-size: 13.5px;
+  font-weight: 850;
+}
+
+.prec-meta {
+  margin-top: 5px;
+  color: #6c7a7a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.prec-meta b {
+  color: #435757;
+  font-weight: 800;
+}
+
+.outcome {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 850;
+}
+
+.outcome.win {
+  color: #2f6b4c;
+  background: #e6f4ec;
+}
+
+.outcome.loss {
+  color: #a3503c;
+  background: #f9e7e3;
+}
+
+.act {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+}
+
+.act:not(:last-child) {
+  border-bottom: 1px solid #f4ebe0;
+}
+
+.act-rank {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  color: #fff8ef;
+  background: #de5b49;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.act-what {
+  color: #173f45;
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.act-how {
+  margin-top: 4px;
+  color: #6c7a7a;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* -------------------------------------- lean panel (panel only) */
+
+.summary {
+  color: #173f45;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.summary.muted {
+  color: #8a7b6d;
+}
+
+.kv-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 8px 0;
+}
+
+.kv-row + .kv-row {
+  border-top: 1px solid #f4ebe0;
+}
+
+.kv-label {
+  flex: none;
+  width: 88px;
+  color: #8a7b6d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.kv-value {
+  color: #173f45;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.org-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.org-chip {
+  padding: 5px 11px;
+  border: 1px solid #dcebe6;
+  border-radius: 999px;
+  color: #2f6b64;
+  background: #f2f9f6;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.panel-body .act {
+  align-items: flex-start;
+  padding: 9px 0;
+}
+
+.panel-body .act-what {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.panel-body .divergence .zones {
+  margin-top: 0;
+}
+
+/* ------------------------- graph traversal (Use-of-Jac evidence) */
+
+.trace {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trace li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-left: 6px;
+  padding: 9px 0 9px 18px;
+  border-left: 2px solid #cfe6e4;
+}
+
+.trace-edge {
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: #3f7a72;
+  background: #eaf5f1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 800;
+}
+
+.trace-kind {
+  color: #8a7b6d;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.trace-label {
+  color: #173f45;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/* ------------------------------------------------ full workup page */
+
+.workup {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 4px 0 40px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: #6c7a7a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.back-link:hover {
+  color: #173f45;
+}
+
+.workup-head {
+  margin-bottom: 6px;
+}
+
+@media (max-width: 1180px) {
+  .actions-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .map-frame {
+    height: 400px;
+  }
+
+  .issue-panel {
+    height: auto;
+    max-height: 560px;
+  }
+}

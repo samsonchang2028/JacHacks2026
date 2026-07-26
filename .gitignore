@@ -1,0 +1,10 @@
+AGENTS.MD
+skills-lock.json
+.agents
+.jac/
+node_modules/
+.vscode/
+.idea/
+.codex/
+.impeccable/
+.env
