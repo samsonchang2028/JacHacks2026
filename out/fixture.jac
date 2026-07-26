@@ -104,3 +104,5 @@ trust_for_t = Testimony(speaker="Trust for Public Land", affiliation="Non-profit
 # choice is a curation decision, not something the fixture encodes.
 
 # ---- Incidents ----
+incident = Incident(kind="forum", summary="10 Reddit thread(s) matching 'Portsmouth Square San Francisco' across CityPorn, HistoryPorn, bayarea, sanfrancisco; most-discussed: \"San Francisco's most controversial bridge is coming down [Portsmouth Square]\" (36 comments, 106 upvotes)", count=10, source_url="https://www.reddit.com/r/sanfrancisco/comments/1pqrt0y/san_franciscos_most_controversial_bridge_is/");
+incident2 = Incident(kind="forum", summary="7 Reddit thread(s) matching 'Great Highway Prop K San Francisco' across sanfrancisco; most-discussed: \"Prop K - Closing the Great Highway: Let's Discuss.\" (536 comments, 162 upvotes)", count=7, source_url="https://www.reddit.com/r/sanfrancisco/comments/1f9sd6q/prop_k_closing_the_great_highway_lets_discuss/");

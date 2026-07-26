@@ -8,8 +8,14 @@
       "timeline": "groundbreaking June 2026",
       "source_url": "",
       "fetched_at": "",
-      "geo_zones": ["Chinatown", "District 3"],
-      "decision_bodies": ["SF Recreation and Park Department", "District 3 Supervisor's Office"]
+      "geo_zones": [
+        "Chinatown",
+        "District 3"
+      ],
+      "decision_bodies": [
+        "SF Recreation and Park Department",
+        "District 3 Supervisor's Office"
+      ]
     },
     {
       "name": "Proposition K (Upper Great Highway closure)",
@@ -19,41 +25,79 @@
       "timeline": "passed Nov 2024",
       "source_url": "",
       "fetched_at": "",
-      "geo_zones": ["Sunset", "Richmond"],
-      "decision_bodies": ["San Francisco citywide electorate"]
+      "geo_zones": [
+        "Sunset",
+        "Richmond"
+      ],
+      "decision_bodies": [
+        "San Francisco citywide electorate"
+      ]
     }
   ],
   "geo_zones": [
-    { "name": "Chinatown", "kind": "neighborhood", "population_est": 0, "notes": "" },
-    { "name": "District 3", "kind": "district", "population_est": 0, "notes": "" },
-    { "name": "Sunset", "kind": "neighborhood", "population_est": 0, "notes": "" },
-    { "name": "Richmond", "kind": "neighborhood", "population_est": 0, "notes": "" },
-    { "name": "San Francisco (citywide electorate)", "kind": "citywide", "population_est": 0, "notes": "" }
+    {
+      "name": "Chinatown",
+      "kind": "neighborhood",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "District 3",
+      "kind": "district",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "Sunset",
+      "kind": "neighborhood",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "Richmond",
+      "kind": "neighborhood",
+      "population_est": 0,
+      "notes": ""
+    },
+    {
+      "name": "San Francisco (citywide electorate)",
+      "kind": "citywide",
+      "population_est": 0,
+      "notes": ""
+    }
   ],
   "decision_bodies": [
     {
       "name": "SF Recreation and Park Department",
       "kind": "commission",
       "jurisdiction": "citywide agency",
-      "accountable_to": ["San Francisco (citywide electorate)"]
+      "accountable_to": [
+        "San Francisco (citywide electorate)"
+      ]
     },
     {
       "name": "District 3 Supervisor's Office",
       "kind": "supervisor",
       "jurisdiction": "District 3",
-      "accountable_to": ["District 3"]
+      "accountable_to": [
+        "District 3"
+      ]
     },
     {
       "name": "San Francisco citywide electorate",
       "kind": "electorate",
       "jurisdiction": "citywide",
-      "accountable_to": ["San Francisco (citywide electorate)"]
+      "accountable_to": [
+        "San Francisco (citywide electorate)"
+      ]
     },
     {
       "name": "SF Planning Department",
       "kind": "department",
       "jurisdiction": "citywide agency",
-      "accountable_to": ["San Francisco (citywide electorate)"]
+      "accountable_to": [
+        "San Francisco (citywide electorate)"
+      ]
     }
   ],
   "comment_channels": [
@@ -64,8 +108,12 @@
       "languages": "English, 繁體中文, Español, Filipino, Tiếng Việt",
       "source_url": "https://sfplanning.org/public-hearings",
       "deadlines": [
-        { "kind": "comment", "date": "unknown", "threshold": "",
-          "source_url": "https://sfplanning.org/public-hearings" }
+        {
+          "kind": "comment",
+          "date": "unknown",
+          "threshold": "",
+          "source_url": "https://sfplanning.org/public-hearings"
+        }
       ]
     },
     {
@@ -75,8 +123,12 @@
       "languages": "English,繁體中文,Español,Filipino,Tiếng Việt",
       "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project",
       "deadlines": [
-        { "kind": "comment", "date": "2021-07-09", "threshold": "",
-          "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project" }
+        {
+          "kind": "comment",
+          "date": "2021-07-09",
+          "threshold": "",
+          "source_url": "https://sfplanning.org/event/public-scoping-meeting-lake-merced-west-project"
+        }
       ]
     },
     {
@@ -86,8 +138,12 @@
       "languages": "Spanish, Cantonese, Filipino",
       "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element",
       "deadlines": [
-        { "kind": "comment", "date": "2021-07-16", "threshold": "",
-          "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element" }
+        {
+          "kind": "comment",
+          "date": "2021-07-16",
+          "threshold": "",
+          "source_url": "https://sfplanning.org/event/public-scoping-meeting-housing-element"
+        }
       ]
     }
   ],
@@ -98,7 +154,9 @@
       "language": "zh",
       "contact": "info@chssc.org",
       "inside_process": false,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "resolved from https://chssc.org/chinese-consolidated-benevolent-association/"
     },
     {
@@ -107,7 +165,9 @@
       "language": "zh",
       "contact": "",
       "inside_process": false,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "checked https://chinatownmerchantssf.org/ and 1 contact page(s), no org-level contact found"
     },
     {
@@ -116,7 +176,9 @@
       "language": "en",
       "contact": "info@sfchamber.com, 415.392.4520",
       "inside_process": false,
-      "serves": ["San Francisco (citywide electorate)"],
+      "serves": [
+        "San Francisco (citywide electorate)"
+      ],
       "notes": "resolved from https://sfchamber.com/contact-us"
     },
     {
@@ -125,7 +187,9 @@
       "language": "zh",
       "contact": "hello@cycsf.org, (415) 775-1345",
       "inside_process": false,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "resolved from https://www.cycsf.org/contact"
     },
     {
@@ -134,7 +198,9 @@
       "language": "en",
       "contact": "info@chinatowncdc.org",
       "inside_process": true,
-      "serves": ["Chinatown"],
+      "serves": [
+        "Chinatown"
+      ],
       "notes": "resolved from https://www.chinatowncdc.org/about-us/contact-us"
     },
     {
@@ -143,7 +209,9 @@
       "language": "en",
       "contact": "",
       "inside_process": false,
-      "serves": ["Richmond"],
+      "serves": [
+        "Richmond"
+      ],
       "notes": "checked https://richmondsf.org/ and 2 contact page(s), no org-level contact found"
     },
     {
@@ -152,7 +220,9 @@
       "language": "en",
       "contact": "",
       "inside_process": false,
-      "serves": ["Richmond"],
+      "serves": [
+        "Richmond"
+      ],
       "notes": "checked https://www.gearyblvd.org/ and 2 contact page(s), no org-level contact found"
     },
     {
@@ -161,7 +231,9 @@
       "language": "en",
       "contact": "LowellPTSA101@gmail.com",
       "inside_process": false,
-      "serves": ["Sunset"],
+      "serves": [
+        "Sunset"
+      ],
       "notes": "resolved from http://www.lowellptsa.org/contact-us.html; org-level PTSA contact only, no parent records"
     },
     {
@@ -170,7 +242,9 @@
       "language": "en",
       "contact": "",
       "inside_process": false,
-      "serves": ["Sunset"],
+      "serves": [
+        "Sunset"
+      ],
       "notes": "config/orgs.yaml flags this as needing resolution to a specific congregation before scraping; generic search (sunset.life) found no org-level contact, as expected pre-resolution"
     }
   ],
@@ -352,5 +426,18 @@
       "source_url": "https://www.spur.org/voter-guide/2024-11/sf-prop-k-upper-great-highway"
     }
   ],
-  "incidents": []
+  "incidents": [
+    {
+      "kind": "forum",
+      "summary": "10 Reddit thread(s) matching 'Portsmouth Square San Francisco' across CityPorn, HistoryPorn, bayarea, sanfrancisco; most-discussed: \"San Francisco's most controversial bridge is coming down [Portsmouth Square]\" (36 comments, 106 upvotes)",
+      "count": 10,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1pqrt0y/san_franciscos_most_controversial_bridge_is/"
+    },
+    {
+      "kind": "forum",
+      "summary": "7 Reddit thread(s) matching 'Great Highway Prop K San Francisco' across sanfrancisco; most-discussed: \"Prop K - Closing the Great Highway: Let's Discuss.\" (536 comments, 162 upvotes)",
+      "count": 7,
+      "source_url": "https://www.reddit.com/r/sanfrancisco/comments/1f9sd6q/prop_k_closing_the_great_highway_lets_discuss/"
+    }
+  ]
 }

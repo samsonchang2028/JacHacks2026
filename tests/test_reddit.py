@@ -107,6 +107,24 @@ def test_search_is_per_case_keyword_not_firehose():
     assert run_input["searchComments"] is False
 
 
+def test_summarize_incident_aggregates_by_discussion_volume():
+    from ingest.fetch.reddit import summarize_incident
+
+    records = [
+        {"query": "q", "scope": "CityPorn", "title": "Pretty photo, huge karma",
+         "permalink": "https://reddit.com/1", "score": 999, "num_comments": 2},
+        {"query": "q", "scope": "sanfrancisco", "title": "Actual controversy thread",
+         "permalink": "https://reddit.com/2", "score": 10, "num_comments": 50},
+    ]
+    inc = summarize_incident(records)
+    assert inc["kind"] == "forum"
+    assert inc["count"] == 2
+    # ranked by comments (discussion volume), not upvotes
+    assert inc["source_url"] == "https://reddit.com/2"
+    assert "Actual controversy thread" in inc["summary"]
+    assert summarize_incident([]) is None
+
+
 def test_missing_token_fails_loud(monkeypatch):
     monkeypatch.delenv("APIFY_API_TOKEN", raising=False)
     monkeypatch.delenv("APIFY_API_KEY", raising=False)

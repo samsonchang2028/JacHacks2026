@@ -136,6 +136,33 @@ def search_reddit(query: str, case: str, max_items: int = 25,
     return records
 
 
+def summarize_incident(records: list[dict]) -> dict | None:
+    """Aggregate one case's posts into a single fixture-shaped Incident
+    (p1ingestion.md Task 7: thread counts and topic frequency only — never
+    usernames, never quoted comments as Testimony). kind='forum' rather
+    than shoehorning into '311'/'complaint_log'; source_url is the
+    most-engaged thread's permalink so the citation resolves to something
+    a human can actually read."""
+    if not records:
+        return None
+    # Rank by comment count, not upvotes: an Incident is about discussion
+    # volume, and upvote-ranking surfaces high-karma photo posts (verified
+    # live: an 1851 history photo beat the bridge-demolition thread).
+    top = max(records, key=lambda r: r["num_comments"])
+    subs = sorted({r["scope"] for r in records if r["scope"]})
+    query = records[0]["query"]
+    return {
+        "kind": "forum",
+        "summary": (
+            f"{len(records)} Reddit thread(s) matching {query!r} "
+            f"across {', '.join(subs)}; most-discussed: {top['title'][:80]!r} "
+            f"({top['num_comments']} comments, {top['score']} upvotes)"
+        ),
+        "count": len(records),
+        "source_url": top["permalink"],
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke", action="store_true",

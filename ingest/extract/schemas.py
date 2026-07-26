@@ -18,7 +18,10 @@ CATEGORIES = [
 COMMENT_METHODS = ["email", "web_form", "in_person", "mail"]
 DEADLINE_KINDS = ["comment", "appeal", "signature", "hearing"]
 GEOZONE_KINDS = ["district", "neighborhood", "citywide"]
-INCIDENT_KINDS = ["311", "complaint_log"]
+# "forum" = aggregate Reddit thread counts (fetch/reddit.py, spec Task 7:
+# Incident-adjacent context, not evidence). schema.jac's Incident.kind is a
+# free str whose comment predates this — flag to the team before demo.
+INCIDENT_KINDS = ["311", "complaint_log", "forum"]
 TESTIMONY_KINDS = ["testimony", "argument", "evidence", "counterargument"]
 
 PROJECT_SCHEMA = {
