@@ -121,8 +121,7 @@ def run(case_queries: list[str], articles_per_case: int = 4) -> list[dict]:
 if __name__ == "__main__":
     import json
 
-    testimony = run([
-        "Portsmouth Square Chinatown pedestrian bridge removal opposition CCBA",
-        "Prop K Great Highway closure Sunset Richmond opposition",
-    ])
+    from ingest.case import list_cases
+
+    testimony = run([m["search_terms"]["news"] for m in list_cases()])
     print(json.dumps(testimony, indent=2, ensure_ascii=False))

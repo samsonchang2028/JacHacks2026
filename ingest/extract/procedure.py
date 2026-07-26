@@ -160,7 +160,22 @@ def run(sites: list[str] | None = None, pages_per_site: int = 5) -> list[dict]:
 
 
 if __name__ == "__main__":
-    channels = run()
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--case",
+                         help="Scrape a case manifest's procedure_targets "
+                              "instead of the global sources.yaml list")
+    args = parser.parse_args()
+
+    sites = None
+    if args.case:
+        from ingest.case import load_case
+
+        sites = load_case(args.case).get("procedure_targets") or None
+        print(f"[procedure] targets from case {args.case!r}: {sites}")
+
+    channels = run(sites=sites)
     print(f"[procedure] {len(channels)} comment channel(s) found")
     for ch in channels:
         print(f"  - {ch['recipient']} ({ch['method']}) -> {ch['source_url']}")

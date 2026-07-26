@@ -28,6 +28,8 @@ RESOURCE_BASE = "https://data.sfgov.org/resource"
 VIEWS_BASE = "https://data.sfgov.org/api/views"
 
 # Chinatown, SF bounding box (Stockton/Powell to Kearny, Bush to Broadway).
+# Default for the --smoke test; `--case <slug>` overrides it with the case
+# manifest's geography.impact_bbox instead.
 CHINATOWN_BBOX = {
     "min_lat": 37.790,
     "max_lat": 37.798,
@@ -176,7 +178,23 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--smoke", action="store_true",
                          help="Run the Chinatown-bbox 311 smoke test")
+    parser.add_argument("--case",
+                         help="Query 311 inside a case manifest's impact_bbox "
+                              "(ingest/config/cases/<slug>.yaml)")
     args = parser.parse_args()
+
+    if args.case:
+        from ingest.case import load_case
+
+        manifest = load_case(args.case)
+        bbox = manifest["geography"].get("impact_bbox")
+        if not bbox:
+            print(f"[socrata] case {args.case!r} has no geography.impact_bbox — "
+                  "add one to the manifest to enable 311 queries", file=sys.stderr)
+            return 1
+        rows = query_311_in_bbox(bbox=bbox)
+        print(f"[socrata] {len(rows)} rows in {args.case!r} impact bbox")
+        return 0
 
     if args.smoke:
         rows = query_311_in_bbox()
