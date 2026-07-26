@@ -26,28 +26,22 @@ import subprocess
 
 from ingest.fetch.reddit import fetch_threads, search_reddit
 
-# What each case is actually about, for the relevance judgment.
-CASES = [
-    {
-        "case": "portsmouth-square",
-        "query": "Portsmouth Square San Francisco",
-        "description": (
-            "The Portsmouth Square Improvement Project in SF Chinatown: the "
-            "~$73M renovation, the removal of the pedestrian bridge over "
-            "Kearny St, the ~2-year park closure, and community reaction "
-            "to any of those."
-        ),
-    },
-    {
-        "case": "prop-k-great-highway",
-        "query": "Great Highway Prop K San Francisco",
-        "description": (
-            "Proposition K (Nov 2024) permanently closing the Upper Great "
-            "Highway to cars, the resulting park, the westside opposition, "
-            "lawsuits, recall, and follow-up ballot measures."
-        ),
-    },
-]
+
+def load_cases() -> list[dict]:
+    """Per-case forum config from the case manifests
+    (ingest/config/cases/*.yaml): the manifest's forum search term drives
+    the Reddit query and its description drives the LLM relevance
+    judgment. Adding a new case is a manifest, not a code change."""
+    from ingest.case import list_cases
+
+    return [
+        {
+            "case": m["slug"],
+            "query": m["search_terms"]["forum"],
+            "description": m["description"].strip(),
+        }
+        for m in list_cases()
+    ]
 
 
 class ForumSummaryError(RuntimeError):
@@ -127,19 +121,20 @@ def build_incidents(case_cfg: dict, posts: list[dict], threads: dict,
 def main() -> int:
     import pathlib
 
+    cases = load_cases()
     # One fetch_threads call across ALL cases: its cache key is the sorted
     # permalink set, so per-case subsets would miss cache and re-spend an
     # actor run (learned the expensive way).
     posts_by_case = {
         cfg["case"]: search_reddit(cfg["query"], case=cfg["case"], max_items=10)
-        for cfg in CASES
+        for cfg in cases
     }
     all_links = [p["permalink"] for posts in posts_by_case.values() for p in posts]
     threads = fetch_threads(all_links, max_comments=15)
 
     fixture_path = pathlib.Path(__file__).resolve().parents[2] / "out" / "fixture.json"
     all_incidents = []
-    for case_cfg in CASES:
+    for case_cfg in cases:
         print(f"[forum] === {case_cfg['case']} ===")
         all_incidents.extend(
             build_incidents(case_cfg, posts_by_case[case_cfg["case"]], threads))

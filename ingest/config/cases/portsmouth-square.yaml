@@ -1,0 +1,42 @@
+# Gold-standard case manifest — hand-curated, verified.
+# A manifest only says WHERE TO LOOK (research knobs). It never asserts a
+# procedural fact (channels/deadlines/contacts come from the fetchers, with
+# source_urls) and never carries the inside_process judgment (config/orgs.yaml,
+# set by hand). See ingest/case.py for the schema.
+slug: portsmouth-square
+title: Portsmouth Square Improvement Project
+category: renovation            # MUST be in CATEGORIES (P2's join key)
+description: >
+  The Portsmouth Square Improvement Project in SF Chinatown: the ~$73M
+  renovation, the removal of the pedestrian bridge over Kearny St, the
+  ~2-year park closure, and community reaction to any of those.
+search_terms:
+  news: Portsmouth Square Chinatown pedestrian bridge removal opposition CCBA
+  forum: Portsmouth Square San Francisco
+geography:
+  impact_zones:                 # GeoZone names, must match seed data
+    - Chinatown
+    - District 3
+  decision_zone: District 3     # where the accountable body answers
+  impact_bbox:                  # drives the 311 query (fetch/socrata.py)
+    min_lat: 37.790
+    max_lat: 37.798
+    min_lon: -122.410
+    max_lon: -122.403
+news_domains:
+  - missionlocal.org
+  - sfstandard.com
+  - sfexaminer.com
+  - windnewspaper.com
+procedure_targets:
+  - sfrecpark.org
+  - sfplanning.org
+  - sfbos.org
+org_candidates:                 # names only — contacts are fetched, and
+  - Chinese Consolidated Benevolent Association   # inside_process is set by
+  - Merchants United Association of San Francisco # hand in config/orgs.yaml
+  - Chinatown Community Development Center
+  - Community Youth Center
+  - SF Chamber of Commerce
+generated_by: curated
+verified: true

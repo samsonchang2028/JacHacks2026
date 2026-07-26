@@ -1,0 +1,38 @@
+# Gold-standard case manifest — hand-curated, verified.
+# See portsmouth-square.yaml for the trust-tier rules and ingest/case.py
+# for the schema.
+slug: prop-k-great-highway
+title: Prop K — Upper Great Highway closure
+category: road_closure          # MUST be in CATEGORIES (P2's join key)
+description: >
+  Proposition K (Nov 2024) permanently closing the Upper Great Highway to
+  cars, the resulting park, the westside opposition, lawsuits, recall, and
+  follow-up ballot measures.
+search_terms:
+  news: Prop K Great Highway closure Sunset Richmond opposition
+  forum: Great Highway Prop K San Francisco
+geography:
+  impact_zones:
+    - Sunset
+    - Richmond
+  decision_zone: San Francisco (citywide electorate)   # the hero divergence
+  impact_bbox:                  # Upper Great Highway corridor
+    min_lat: 37.735
+    max_lat: 37.771
+    min_lon: -122.515
+    max_lon: -122.505
+news_domains:
+  - missionlocal.org
+  - sfstandard.com
+  - sfexaminer.com
+  - richmondsunsetnews.com
+procedure_targets:
+  - sfbos.org
+  - sfplanning.org
+org_candidates:
+  - Richmond Neighborhood Center
+  - Geary Merchants Association
+  - Lowell High School PTSA
+  - Sunset churches
+generated_by: curated
+verified: true

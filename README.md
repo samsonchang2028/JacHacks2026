@@ -131,6 +131,30 @@ whatever pieces of `out/fixture.jac` you want.
 
 ---
 
+## 2b. Generalizing to a new case
+
+The pipeline is driven by **case manifests** (`ingest/config/cases/<slug>.yaml`)
+— the two demo cases are curated, `verified: true` gold standards, and adding
+a new case is a config change, not a code change. A manifest holds research
+knobs only (search terms, zones, candidate domains/orgs); fetched facts always
+come from the fetchers with source URLs, and `inside_process` stays a hand-set
+judgment in `config/orgs.yaml`.
+
+Draft one with the LLM bootstrap:
+
+```bash
+python -m ingest.bootstrap_case --subject "Balboa Reservoir housing development"
+```
+
+Firecrawl research → LLM fills the template → `<slug>.draft.yaml`
+(`verified: false`, ignored by the pipeline) + a human review checklist.
+Review, set `verified: true`, rename to `<slug>.yaml`, and every stage —
+311 (`--case`), procedure (`--case`), narrative, forum — picks it up.
+
+**Full pipeline/API reference for frontend integration: [`ingest/README.md`](ingest/README.md).**
+
+---
+
 ## 3. Running the tests
 
 ```bash
