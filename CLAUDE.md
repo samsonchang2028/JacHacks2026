@@ -6,7 +6,7 @@ You are implementing a one-day hackathon project in Jac.
 
 1. Read `AGENTS.md`.
 2. Read `PACKAGE_INDEX.md`.
-3. Read all numbered documents in `docs/`.
+3. Read all documents in `docs/`.
 4. Inspect the current tree.
 5. Run the current compile or test command.
 6. Summarize the exact milestone and files you propose to change.

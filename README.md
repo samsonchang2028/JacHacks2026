@@ -1,8 +1,33 @@
-# Quorum — Signal & Procedure Ingestion (P1)
+# Quorum
 
-Making community objections countable. See [`DESIGNDOC.md`](DESIGNDOC.md) for the
-full product vision and [`p1ingestion.md`](p1ingestion.md) for the ingestion
-spec this pipeline implements.
+**Making community objections countable.** An objection matters only when it
+is countable, on the record, and aimed at whoever actually decides. Quorum
+routes a civic issue to the body, channel, and deadline that count — and says
+so explicitly when the impact zone and the decision zone diverge.
+
+Where to read next: [`PACKAGE_INDEX.md`](PACKAGE_INDEX.md) (what lives where)
+· [`OVERVIEW.md`](OVERVIEW.md) (product overview) ·
+[`DESIGNDOC.md`](DESIGNDOC.md) (full vision) ·
+[`p1ingestion.md`](p1ingestion.md) (ingestion spec) ·
+[`FRONTEND.md`](FRONTEND.md) (UI reference) ·
+[`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) (state of the build).
+
+## Quick start — the demo
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+pip install jaclang
+jac start main.jac --dev
+```
+
+App on http://localhost:8000, API on http://localhost:8001. The graph seeds
+itself on first page load and attaches the pipeline artifact
+(`out/fixture.json`, checked in) — no pipeline run and no API keys are needed
+to demo. Delete `.jac/data/*.db` any time to reseed from scratch. Keys in
+`.env` are only for running the ingestion pipeline itself (§1–2).
+
+---
 
 This repo has three halves:
 
@@ -15,9 +40,12 @@ This repo has three halves:
   frontend. See [`FRONTEND.md`](FRONTEND.md) for routes, files, and walker
   endpoints. Run with `jac start main.jac --dev` (app on :8000, API on :8001).
 
-Note: the UI currently ships with its own seeded demo graph in root `main.jac`.
-Wiring it to `schemas/` walkers is follow-up work; both trees coexist after
-the frontend integration.
+Note: the UI seeds its curated demo graph in root `main.jac` and then reads
+the pipeline's artifact **`out/fixture.json`** through `fixture_bridge.jac`
+(testimony, forum signal, verified channels, org contacts — attached at seed
+time with provenance-based case mapping; see `FRONTEND.md` § Backend artifact
+wiring). Wiring the UI to the `schemas/` walkers themselves (recourse,
+evidence, campaign) is still follow-up work; both trees coexist.
 
 ---
 
@@ -85,9 +113,8 @@ python -m ingest.fetch.reddit --smoke      # one small live run (10 items, ~a ce
 
 Reddit closed self-service API registration (Nov 2025) and its public
 `.json` endpoints (May 2026), so this rides Apify's `reddit-scraper-lite`
-actor per `PLAN_reddit_and_legistar.md` — a scraping path, not an API path,
-which sits against Reddit's user agreement; stated plainly here per the
-plan's disclosure note. Usernames are scrubbed to `"resident commenter"`
+actor — a scraping path, not an API path, which sits against Reddit's user
+agreement; stated plainly here rather than glossed. Usernames are scrubbed to `"resident commenter"`
 before anything is cached; posts are Incident-adjacent context, never
 Testimony. Needs `APIFY_API_TOKEN` (or `APIFY_API_KEY`) in `.env`.
 
@@ -168,15 +195,20 @@ Review, set `verified: true`, rename to `<slug>.yaml`, and every stage —
 python -m pytest tests/ -v
 ```
 
-16 tests, no network required — `test_contract.py` validates
+42 tests, no network required — `test_contract.py` validates
 `out/fixture.json` against the schema; `test_firecrawl_client.py` verifies
 cache-hit and budget-guard behavior against a fake transport;
-`test_procedure.py` / `test_to_jac.py` cover the extraction/emit logic
-directly.
+`test_procedure.py` / `test_to_jac.py` / `test_forum.py` cover the
+extraction/emit logic directly; `test_case.py`, `test_reddit.py`, and
+`test_legistar_portal.py` cover manifests, scrub rules, and portal parsing
+(against checked-in HTML fixtures).
 
 ---
 
-## 4. Running the graph (the actual demo)
+## 4. Running the graph smoke test
+
+The product demo is the UI (see Quick start above). This verifies the
+`schemas/` reasoning graph on its own:
 
 ```bash
 pip install jaclang
@@ -185,6 +217,9 @@ jac run schemas/smoke.jac
 
 Passes when both seeders load, `DivergenceCheck` fires on Prop K and not on
 Portsmouth Square, and `PrecedentMatcher` returns matches for both cases.
+The other executable contracts are `schemas/smoke_layers.jac` (fixture
+ingestion + seven layers), `schemas/smoke_civic.jac` (evidence + recourse),
+and `schemas/smoke_campaign.jac` (dry-run campaign planning).
 
 **`jac` persists a session DB keyed by your working directory**, at
 `<cwd>/.jac/data/<script-name>.db` (gitignored) — running `jac run
@@ -221,17 +256,20 @@ runtime rather than fabricating a plausible-looking one — see the comment in
 `seed_signal.jac` above the Portsmouth Square procedure section. This
 mirrors the case's own thesis: the channel is genuinely missing.
 
-**`incidents` is empty on purpose.** We queried 311 both by bounding box and
+**No 311 incidents, on purpose.** We queried 311 both by bounding box and
 by full-text keyword ("Portsmouth Square" alone returns 994 cases, 609 of
 them Rec & Park requests at the exact address). All of it is routine
 maintenance traffic — restrooms, trash, graffiti, recreation equipment.
 SF's 311 taxonomy has no category for opposition to a project; that signal
 lives in testimony and public comment (which we did capture), not 311. An
-honest empty list beats maintenance tickets dressed up as controversy
-evidence. Reasoning also documented in `ingest/fetch/socrata.py`.
+honest zero beats maintenance tickets dressed up as controversy evidence.
+Reasoning also documented in `ingest/fetch/socrata.py`.
 
-**Skipped:** Task 7 (Reddit) — deprioritized per the spec's own instruction;
-nothing in the demo depends on it.
+**What `incidents` holds instead:** 11 community-forum threads (Task 7,
+initially deprioritized per the spec, later implemented via Apify — see the
+Reddit section above). One record per relevant r/sanfrancisco thread,
+LLM-summarized, usernames scrubbed, comment volume as `count`. The UI and
+graph treat these as context signal, never as testimony.
 
 ---
 

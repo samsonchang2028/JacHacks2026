@@ -8,6 +8,14 @@ ponytail: schema + seed + walkers live in one file so there is no cross-module
 symbol resolution to debug mid-hackathon. Split when it stops fitting on screen.
 """
 
+# The ingestion pipeline's artifact (out/fixture.json) enters the graph
+# through the bridge: real testimony, forum signal, verified channels, and
+# org contacts, attached at seed time with provenance-based case mapping.
+import from fixture_bridge {
+    attach_fixture, testimony_for, signals_for, outreach_for,
+    pipeline_status, record_count
+}
+
 # ================================================================= schema
 
 node Issue {
@@ -67,7 +75,14 @@ node Organization {
     has name: str,
         initials: str = "",
         role: str = "",
-        language: str = "EN";
+        language: str = "EN",
+        # Enriched from out/fixture.json by the fixture bridge when the
+        # pipeline resolved this org. inside_process is the hand-set
+        # judgment from config/orgs.yaml ("true"/"false"; "" = no record).
+        community: str = "",
+        contact: str = "",
+        inside_process: str = "",
+        notes: str = "";
 }
 
 node PrecedentCase {
@@ -112,7 +127,11 @@ walker:pub seed_graph {
     can build with Root entry {
         existing = [-->[?:Issue]];
         if len(existing) > 0 {
-            report {"seeded": False, "issues": len(existing)};
+            # Curated graph already present; the fixture attach is its own
+            # idempotent step so a pipeline artifact newer than the seed
+            # still lands (fresh DBs get it below).
+            fixture = attach_fixture(existing, [-->[?:Organization]]);
+            report {"seeded": False, "issues": len(existing), "fixture": fixture};
             disengage;
         }
 
@@ -329,7 +348,8 @@ walker:pub seed_graph {
         root ++> Issue(slug="bayview-rezoning", title="Bayview industrial rezoning",
             district="Bayview / D10", lat=37.7440, lng=-122.3900, tier="thin");
 
-        report {"seeded": True, "issues": len([-->[?:Issue]])};
+        fixture = attach_fixture([-->[?:Issue]], [-->[?:Organization]]);
+        report {"seeded": True, "issues": len([-->[?:Issue]]), "fixture": fixture};
     }
 }
 
@@ -343,7 +363,10 @@ walker:pub find_issues {
         for i in [-->[?:Issue]] {
             pins.append({
                 "slug": i.slug, "title": i.title, "district": i.district,
-                "lat": i.lat, "lng": i.lng, "tier": i.tier
+                "lat": i.lat, "lng": i.lng, "tier": i.tier,
+                # Pipeline records mapped to this issue (testimony + forum
+                # threads) -- retrieved counts, never invented ones.
+                "on_record": record_count(i)
             });
         }
         report pins;
@@ -537,7 +560,8 @@ walker:pub issue_detail {
         for o in [issue->:organized_by:->][?:Organization] {
             orgs.append({
                 "name": o.name, "initials": o.initials,
-                "role": o.role, "language": o.language
+                "role": o.role, "language": o.language,
+                "contact": o.contact, "inside_process": o.inside_process
             });
         }
 
@@ -560,6 +584,21 @@ walker:pub issue_detail {
             actions.append({"rank": s.rank, "what": s.what, "how": s.how});
         }
 
+        # --- pipeline record (out/fixture.json via the fixture bridge) ----
+        # Retrieved statements, forum signal, and reachable orgs mapped to
+        # this issue; plus the artifact-wide status the provenance panel
+        # renders. All of it is displayed as record, never as support.
+        testimony = testimony_for(issue);
+        signals = signals_for(issue);
+        outreach = outreach_for(issue);
+        pipeline = pipeline_status();
+        if len(testimony) > 0 {
+            path.append({"kind": "Testimony", "label": str(len(testimony)) + " statements on the record", "via": "has_testimony"});
+        }
+        if len(signals) > 0 {
+            path.append({"kind": "Incident", "label": str(len(signals)) + " community threads", "via": "has_signal"});
+        }
+
         report {
             "found": True,
             "slug": issue.slug, "title": issue.title, "district": issue.district,
@@ -577,6 +616,10 @@ walker:pub issue_detail {
             "not_counts": issue.not_counts,
             "precedents": precedents,
             "actions": actions,
+            "testimony": testimony,
+            "signals": signals,
+            "outreach": outreach,
+            "pipeline": pipeline,
             "path": path
         };
     }

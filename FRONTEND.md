@@ -22,6 +22,20 @@ jac start main.jac --dev
 ```
 
 Graph data lives in `.jac/data/*.db`. Delete those files to force a fresh `seed_graph`.
+Do that after pulling the fixture bridge (the `Organization` schema gained pipeline
+fields, and the fixture attaches once per graph).
+
+## Backend artifact wiring
+
+The UI graph reads the ingestion pipeline's artifact **`out/fixture.json`**
+("THE CONTRACT", `ingest/README.md` §1) through `fixture_bridge.jac` at seed
+time: 22 testimony records, 11 forum threads, 3 verified comment channels, and
+9 organizations attach to the curated graph with provenance-based case mapping
+(subject markers for testimony/threads; the case manifests' `org_candidates`
+for orgs). Channels are deliberately bound to **no** decision body — the
+contract carries no channel→body link, so the UI renders that as a gap instead
+of guessing. A missing/unreadable fixture degrades to `pipeline.loaded: false`,
+never an error page.
 
 ---
 
@@ -53,8 +67,8 @@ Base: `http://localhost:8001`
 
 | Method | Endpoint | Body | Used by | Returns |
 |---|---|---|---|---|
-| `POST` | `/walker/seed_graph` | `{}` | Every page on load | `{ seeded, issues }` — idempotent seed of the civic graph |
-| `POST` | `/walker/find_issues` | `{}` | Landing feed, actions map | List of pins: `slug`, `title`, `district`, `lat`, `lng`, `tier` |
+| `POST` | `/walker/seed_graph` | `{}` | Every page on load | `{ seeded, issues, fixture }` — idempotent seed + fixture attach (`fixture` = pipeline status/counts) |
+| `POST` | `/walker/find_issues` | `{}` | Landing feed, actions map | List of pins: `slug`, `title`, `district`, `lat`, `lng`, `tier`, `on_record` (pipeline records mapped to the issue) |
 | `POST` | `/walker/issue_detail` | `{ "slug": "<slug>" }` | Actions panel, issue page | Full workup (see below) or `{ found: false, slug }` |
 | `POST` | `/walker/list_notes` | `{}` | Notes page | List of `{ name, body }` (newest first) |
 | `POST` | `/walker/add_note` | `{ "name": "", "body": "…" }` | Notes form | `{ ok, notes }` or `{ ok: false, error }` |
@@ -69,9 +83,13 @@ Base: `http://localhost:8001`
 | `route` | Human-readable hops (body → zone → channel → deadline) |
 | `counts`, `not_counts` | Validity grid |
 | `actions` | “Do this next” steps |
-| `organizers`, `precedents` | Collapsed background |
+| `organizers`, `precedents` | Collapsed background (organizers now carry `contact` + `inside_process` when the pipeline resolved them) |
 | `resources`, `sources` | Key facts + verification table |
-| `path` | Graph traversal (demoted under Sources) |
+| `testimony` | "The record" wall — pipeline statements with kind/speaker/language/source |
+| `signals` | Forum-thread rows (summary, comment count, source URL) |
+| `outreach` | Reachable orgs from pipeline contact research (contact or explicit blank + notes, `inside_process`) |
+| `pipeline` | Artifact status: `loaded`, counts, and the 3 unbound verified channels |
+| `path` | Graph traversal (demoted under Sources; now includes testimony/signal hops) |
 
 ### Other useful API routes (not UI-primary)
 
@@ -91,6 +109,7 @@ Base: `http://localhost:8001`
 | File | Role |
 |---|---|
 | `main.jac` | Graph schema, seed data, walkers, and client CSS imports (`app` shell) |
+| `fixture_bridge.jac` | Reads `out/fixture.json` into the UI graph: pipeline archetypes (`Testimony`, `Incident`, `PipelineChannel`, `PipelineOrg`), deterministic case mapping, per-issue projections |
 | `jac.toml` | Project config, npm deps (Leaflet, React Router), serve port |
 
 ### Pages (`pages/`)
@@ -111,7 +130,7 @@ Base: `http://localhost:8001`
 | `IssueMap.cl.jac` | Clickable Leaflet pins (`full` / `thin` tiers) for `/actions` |
 | `CaseStudies.cl.jac` | Prop K vote bars + Portsmouth Square zero tiles (landing Cases section) |
 | `ProblemCharts.cl.jac` | Older chart component; superseded on landing by `CaseStudies` |
-| `Sections.cl.jac` | Shared UI blocks for panel + detail: `RoutePanel`, `VerdictBlock`, `RoutePath`, `ValidityGrid`, `NextSteps`, `BackgroundContext`, `SourcesTable`, `TraversalPanel`, plus legacy helpers |
+| `Sections.cl.jac` | Shared UI blocks for panel + detail: `RoutePanel`, `VerdictBlock`, `RoutePath`, `ValidityGrid`, `NextSteps`, `BackgroundContext`, `SourcesTable`, `TraversalPanel`, pipeline-record blocks (`RecordWall`, `SignalList`, `OutreachList`, `PipelineRecord`, `KindPill`, `ProcessPill`), plus legacy helpers |
 
 ### Styles (`assets/`)
 

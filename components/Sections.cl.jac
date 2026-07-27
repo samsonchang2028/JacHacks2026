@@ -12,6 +12,9 @@ def:pub CitationChip(source_url: str, retrieved_at: str) -> JsxElement {
     if source_url == "" {
         return <span className="chip gap">no record retrieved — not generated</span>;
     }
+    if retrieved_at == "" {
+        return <span className="chip">{source_url}</span>;
+    }
     return <span className="chip">{source_url} · retrieved {retrieved_at}</span>;
 }
 
@@ -106,6 +109,15 @@ def:pub RoutePanel(detail: any) -> JsxElement {
                             }
                         </span>
                     </div>
+                    {
+                        <div className="kv-row">
+                            <span className="kv-label">On record</span>
+                            <span className="kv-value">
+                                {str(len(detail["testimony"])) + " statements · " + str(len(detail["signals"])) + " community threads"}
+                            </span>
+                        </div>
+                        if len(detail["testimony"]) + len(detail["signals"]) > 0 else <></>
+                    }
                 </div>
                 if detail["tier"] == "full" else <></>
             }
@@ -304,8 +316,13 @@ def:pub BackgroundContext(
                                     <div className="org-name">
                                         {o["name"]}
                                         <span className="lang-tag">{o["language"]}</span>
+                                        <ProcessPill inside_process={o["inside_process"]}/>
                                     </div>
                                     <div className="org-role">{o["role"]}</div>
+                                    {
+                                        <span className="chip">{o["contact"]}</span>
+                                        if o["contact"] != "" else <></>
+                                    }
                                 </div>
                             </div>
                             for o in organizers
@@ -399,6 +416,200 @@ def:pub SourcesTable(sources: list) -> JsxElement {
                             {"No verified source found for " + str(gap) + (" facts" if gap > 1 else " fact") + ". Quorum will not guess."}
                         </b>
                     }
+                </p>
+            </div>
+        </details>;
+}
+
+# ---- pipeline record (out/fixture.json via the fixture bridge) ---------
+# Everything below renders retrieved records with their sources. Copy is
+# deliberately about *record*, never support: a statement in the press or a
+# forum thread is signal that exists, not a countable submission and not an
+# endorsement.
+
+# The hand-set inside_process judgment from the pipeline ("" = no record).
+def:pub ProcessPill(inside_process: str) -> JsxElement {
+    if inside_process == "true" {
+        return <StatusPill kind="info" label="Inside the process"/>;
+    }
+    if inside_process == "false" {
+        return <StatusPill kind="warn" label="Outside the process"/>;
+    }
+    return <></>;
+}
+
+# A testimony kind is a category, not a verdict. The one colour judgment:
+# counterargument gets the warn tint because it is the record speaking back.
+def:pub KindPill(kind: str) -> JsxElement {
+    if kind == "counterargument" {
+        return <StatusPill kind="warn" label="counterargument"/>;
+    }
+    if kind == "evidence" {
+        return <StatusPill kind="ok" label="evidence"/>;
+    }
+    return <StatusPill kind="info" label={kind}/>;
+}
+
+def:pub RecordWall(testimony: list) -> JsxElement {
+    if len(testimony) == 0 {
+        return <></>;
+    }
+    return
+        <div className="record-wall">
+            {[
+                <article className="quote" key={"q-" + str(i)}>
+                    <div className="quote-head">
+                        <KindPill kind={t["kind"]}/>
+                        <span className="quote-speaker">{t["speaker"]}</span>
+                        {
+                            <span className="lang-tag">中文</span>
+                            if t["language"] == "zh" else <></>
+                        }
+                    </div>
+                    <p className="quote-claim">{t["claim"]}</p>
+                    <div className="quote-meta">
+                        {
+                            <span className="quote-affil">{t["affiliation"]}</span>
+                            if t["affiliation"] != "" and t["affiliation"] != t["speaker"] else <></>
+                        }
+                        <CitationChip source_url={t["source_url"]} retrieved_at=""/>
+                    </div>
+                </article>
+                for (i, t) in enumerate(testimony)
+            ]}
+        </div>;
+}
+
+def:pub SignalList(signals: list) -> JsxElement {
+    if len(signals) == 0 {
+        return <></>;
+    }
+    return
+        <div className="signal-list">
+            <p className="signal-caption">
+                Community forum signal, one row per thread. Volume here is
+                context — none of it reaches an official record.
+            </p>
+            {[
+                <div className="sig-row" key={"sig-" + str(i)}>
+                    <span className="sig-count">
+                        {str(s["count"])}<i>comments</i>
+                    </span>
+                    <div>
+                        <p className="sig-summary">{s["summary"]}</p>
+                        <CitationChip source_url={s["source_url"]} retrieved_at=""/>
+                    </div>
+                </div>
+                for (i, s) in enumerate(signals)
+            ]}
+        </div>;
+}
+
+# Orgs from the pipeline's contact research, mapped by the case manifest's
+# own candidate list. A listing means reachable, never "supports this".
+def:pub OutreachList(outreach: list) -> JsxElement {
+    if len(outreach) == 0 {
+        return <></>;
+    }
+    return
+        <details className="ctx" key="outreach">
+            <summary>Reachable organizations — pipeline contact research</summary>
+            <div className="ctx-body">
+                <p className="muted">
+                    Named as research candidates in this case's manifest, then
+                    resolved to an org-level contact — or an explicit blank with
+                    where the pipeline looked. A listing implies reachability,
+                    not a position on this issue.
+                </p>
+                {[
+                    <div className="org" key={o["name"]}>
+                        <div className="org-avatar">{o["initials"]}</div>
+                        <div>
+                            <div className="org-name">
+                                {o["name"]}
+                                {
+                                    <span className="lang-tag">中文</span>
+                                    if o["language"] == "zh" else <></>
+                                }
+                                <ProcessPill inside_process={o["inside_process"]}/>
+                            </div>
+                            <div className="org-role">{o["community"]}</div>
+                            {
+                                <span className="chip">{o["contact"]}</span>
+                                if o["contact"] != "" else
+                                <span className="chip gap">no org-level contact found</span>
+                            }
+                            {
+                                <div className="org-notes">{o["notes"]}</div>
+                                if o["notes"] != "" and o["contact"] == "" else <></>
+                            }
+                        </div>
+                    </div>
+                    for o in outreach
+                ]}
+            </div>
+        </details>;
+}
+
+# Artifact-wide provenance: what out/fixture.json holds, including the
+# verified channels that are deliberately bound to no decision body -- the
+# fixture contract carries no such binding, so the UI shows the gap rather
+# than a guessed edge.
+def:pub PipelineRecord(pipeline: any) -> JsxElement {
+    if not pipeline["loaded"] {
+        return
+            <details className="ctx" id="pipeline">
+                <summary>
+                    Pipeline record{" "}
+                    <StatusPill kind="warn" label="Not loaded"/>
+                </summary>
+                <div className="ctx-body">
+                    <p className="muted">
+                        The ingestion artifact (out/fixture.json) was not found, so
+                        this page shows the curated seed only. Run the pipeline and
+                        reload with a fresh graph to attach it.
+                    </p>
+                </div>
+            </details>;
+    }
+    return
+        <details className="ctx" id="pipeline">
+            <summary>
+                Pipeline record — out/fixture.json{" "}
+                <StatusPill kind="ok" label="Loaded"/>
+            </summary>
+            <div className="ctx-body">
+                <p className="muted">
+                    {"Attached from the ingestion artifact: "
+                        + str(pipeline["testimony_n"]) + " testimony records, "
+                        + str(pipeline["signal_n"]) + " forum threads, "
+                        + str(pipeline["org_n"]) + " organizations, and "
+                        + str(pipeline["channel_n"]) + " verified comment channels across both cases."}
+                </p>
+                {[
+                    <div className="pipe-chan" key={"ch-" + str(i)}>
+                        <div className="pipe-chan-name">{c["recipient"]}</div>
+                        <div className="pipe-chan-meta">
+                            <b>{c["method"]}</b>{" — " + c["format_note"]}
+                        </div>
+                        <div className="pipe-chan-meta">Languages: {c["languages"]}</div>
+                        <div className="pipe-chan-meta">
+                            {"Deadline (" + c["deadline_kind"] + "): "}
+                            {
+                                <span className="chip gap">recorded as unknown at source — not guessed</span>
+                                if c["deadline_date"] == "unknown" else c["deadline_date"]
+                            }
+                        </div>
+                        <CitationChip source_url={c["source_url"]} retrieved_at=""/>
+                    </div>
+                    for (i, c) in enumerate(pipeline["channels"])
+                ]}
+                <p className="no-guess">
+                    <b>
+                        No channel above is bound to this issue's decision body.
+                        The fixture contract carries no channel-to-body link, so
+                        Quorum reports that binding as a gap instead of guessing it.
+                    </b>
                 </p>
             </div>
         </details>;

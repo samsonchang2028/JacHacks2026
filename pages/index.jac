@@ -21,6 +21,15 @@ cl {
             issues = found.reports[0];
         }
 
+        # Any pin with pipeline records on file flips the feed footer from
+        # "counts will land" to naming where the counts came from.
+        has_records = False;
+        for i in issues {
+            if i["on_record"] > 0 {
+                has_records = True;
+            }
+        }
+
         return
             <div className="landing">
 
@@ -129,7 +138,15 @@ cl {
                             >
                                 <div>
                                     <div className="feed-title">{i["title"]}</div>
-                                    <div className="feed-meta">{i["district"]}</div>
+                                    <div className="feed-meta">
+                                        {i["district"]}
+                                        {
+                                            <span className="feed-records">
+                                                {" · " + str(i["on_record"]) + " records on file"}
+                                            </span>
+                                            if i["on_record"] > 0 else <></>
+                                        }
+                                    </div>
                                 </div>
                                 <span className={"status review" if i["tier"] == "full" else "status watch"}>
                                     {"Review needed" if i["tier"] == "full" else "Monitoring"}
@@ -140,7 +157,13 @@ cl {
                     </div>
 
                     <div className="feed-foot">
-                        <p className="feed-note">Record counts land when the concern pipeline does. Quorum will not invent them.</p>
+                        <p className="feed-note">
+                            {
+                                "Counts are pipeline-retrieved records — testimony and forum threads from out/fixture.json — never invented ones."
+                                if has_records else
+                                "Record counts land when the concern pipeline does. Quorum will not invent them."
+                            }
+                        </p>
                         <Link className="btn btn-primary" to="/actions">Analyse a civic action</Link>
                     </div>
                 </section>

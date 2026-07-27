@@ -2,6 +2,10 @@
 
 Spec for Claude Code. Owner: P1. Consumers: `seed_signal.jac` (P1), frontend (P3).
 
+*(Editorial note, 2026-07-26: the frozen contract this spec calls `SCHEMA.md`
+shipped as `schemas/schema.jac`, mirrored for validation in
+`ingest/extract/schemas.py`. Spec text below is otherwise as written.)*
+
 **Read this first:** `SCHEMA.md` is the frozen contract. Your job is to produce JSON that maps 1:1 onto its node types. Do not invent fields. Do not change category strings.
 
 ---

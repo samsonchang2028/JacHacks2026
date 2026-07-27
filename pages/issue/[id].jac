@@ -7,7 +7,8 @@ Order from the actions-detail mockup: verdict → route → validity → next st
 cl import from "@jac/runtime" { Link, useParams }
 cl import from ...components.Sections {
     VerdictBlock, RoutePath, ValidityGrid, NextSteps,
-    BackgroundContext, SourcesTable, TraversalPanel
+    BackgroundContext, SourcesTable, TraversalPanel,
+    RecordWall, SignalList, OutreachList, PipelineRecord
 }
 
 cl {
@@ -86,6 +87,22 @@ cl {
                     <ValidityGrid counts={detail["counts"]} not_counts={detail["not_counts"]}/>
                 </section>
 
+                {
+                    <section className="band">
+                        <p className="eyebrow plain">The record</p>
+                        <h2>What the pipeline retrieved</h2>
+                        <p className="band-lead">
+                            Statements and community signal collected for this case by the
+                            ingestion pipeline — press, in-language news, public forums —
+                            each with its source. None of it is a countable submission yet;
+                            the route above is how it becomes one.
+                        </p>
+                        <RecordWall testimony={detail["testimony"]}/>
+                        <SignalList signals={detail["signals"]}/>
+                    </section>
+                    if len(detail["testimony"]) + len(detail["signals"]) > 0 else <></>
+                }
+
                 <NextSteps actions={detail["actions"]} correction_h={correction_h}/>
 
                 <section className="band tight">
@@ -96,7 +113,9 @@ cl {
                             organizers={detail["organizers"]}
                             precedents={detail["precedents"]}
                         />
+                        <OutreachList outreach={detail["outreach"]}/>
                         <SourcesTable sources={detail["sources"]}/>
+                        <PipelineRecord pipeline={detail["pipeline"]}/>
                         <TraversalPanel path={detail["path"]}/>
                     </div>
                 </section>

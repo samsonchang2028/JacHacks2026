@@ -1,6 +1,5 @@
 # ============================================================
-# reddit.py — Reddit ingestion via Apify's Reddit Scraper
-# (PLAN_reddit_and_legistar.md §1).
+# reddit.py — Reddit ingestion via Apify's Reddit Scraper.
 #
 # Why not the Reddit API: self-service OAuth registration closed
 # Nov 2025; unauthenticated .json endpoints started 403ing May

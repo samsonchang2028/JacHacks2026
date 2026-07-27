@@ -638,3 +638,9 @@
     grid-template-columns: 70px minmax(0, 1fr);
   }
 }
+
+/* Pipeline-retrieved record count on a feed row (fixture bridge). */
+.feed-records {
+  color: var(--coral-deep);
+  font-weight: var(--w-bold);
+}

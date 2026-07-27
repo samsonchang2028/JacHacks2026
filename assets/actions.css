@@ -1298,3 +1298,129 @@ table.src td.fact {
     display: none;
   }
 }
+
+/* ------------------------------------------------ pipeline record blocks */
+/* The record wall, forum signal, and pipeline provenance on the issue page.
+   All values are tokens from quorum.css; retrieved records reuse the same
+   chip/pill language as every other sourced fact. */
+
+.record-wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--s-4);
+  margin-top: var(--s-5);
+}
+
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-4);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--card);
+}
+
+.quote-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.quote-speaker {
+  font-weight: var(--w-bold);
+  font-size: var(--t-small);
+}
+
+.quote-claim {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+}
+
+.quote-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  margin-top: auto;
+}
+
+.quote-affil {
+  color: var(--ink-faint);
+  font-size: var(--t-fine);
+}
+
+.signal-list {
+  margin-top: var(--s-6);
+}
+
+.signal-caption {
+  margin: 0 0 var(--s-3);
+  color: var(--ink-faint);
+  font-size: var(--t-fine);
+}
+
+.sig-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.sig-count {
+  display: flex;
+  flex-direction: column;
+  color: var(--coral-deep);
+  font-size: var(--t-h4);
+  line-height: 1.1;
+}
+
+.sig-count i {
+  color: var(--ink-faint);
+  font-size: var(--t-micro);
+  font-style: normal;
+  font-weight: var(--w-bold);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.sig-summary {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+}
+
+.org-notes {
+  margin-top: var(--s-1);
+  color: var(--ink-faint);
+  font-size: var(--t-fine);
+}
+
+.pipe-chan {
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--line);
+}
+
+.pipe-chan-name {
+  font-weight: var(--w-bold);
+  font-size: var(--t-small);
+}
+
+.pipe-chan-meta {
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: var(--t-fine);
+}
+
+@media (max-width: 860px) {
+  .record-wall {
+    grid-template-columns: 1fr;
+  }
+
+  .sig-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+}
