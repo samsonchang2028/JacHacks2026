@@ -7,41 +7,58 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; }
-  :where(.grid, .flex) > * { min-width: 0; }
   :where(p, h1, h2, h3, li) { overflow-wrap: anywhere; }
 
   :root {
-    --ink:        #173f45;
-    --ink-soft:   #4a5c5c;
-    --ink-faint:  #8a7b6d;
-    --cream:      #fff8ef;
-    --card:       #fffcf7;
-    --line:       #ebdfd2;
-    --coral:      #de5b49;
+    --ink: #173f45;
+    --ink-soft: #4a5c5c;
+    --ink-faint: #8a7b6d;
+    --cream: #fff8ef;
+    --line: #ebdfd2;
+    --coral: #de5b49;
     --coral-deep: #b8402c;
-    --peach:      #f6b08e;
+    --peach: #f6b08e;
     --peach-deep: #e7c9b5;
-    --teal:       #6fb9bd;
-    --teal-pale:  #eaf5f1;
-
+    --teal: #6fb9bd;
+    --teal-pale: #eaf5f1;
     --shadow-warm: 0 10px 26px rgba(83, 55, 37, 0.09);
 
-    --gap: 18px;
-    --step: 34px;
+    /* DESIGN.md scale — nine steps, two weights */
+    --t-display: clamp(42px, 6.4vw, 84px);
+    --t-h2: clamp(28px, 3.2vw, 42px);
+    --t-h3: 26px;
+    --t-h4: 21px;
+    --t-lead: 18px;
+    --t-body: 16px;
+    --t-small: 14px;
+    --t-fine: 12px;
+    --t-micro: 11px;
+    --w-normal: 400;
+    --w-bold: 700;
+
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 18px;
+    --r-xl: 28px;
+    --r-pill: 999px;
   }
 
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+    /* No scroll-snap. `proximity` let the page rest parked between two
+       sections — half of one, half of the next. `mandatory` would fix that
+       but traps any section taller than the viewport. Free scrolling with a
+       generous section rhythm reads better than either. */
+  }
 
-  /* The warm washes are the Quorum signature: peach top-left, teal bottom-right,
-     fixed so they drift under the content as the page scrolls. */
   body {
     margin: 0;
     color: var(--ink);
     background:
-      radial-gradient(circle at 3% 6%,   rgba(246, 176, 142, 0.34), transparent 34rem),
-      radial-gradient(circle at 97% 34%, rgba(139, 211, 215, 0.26), transparent 36rem),
-      radial-gradient(circle at 8% 72%,  rgba(246, 176, 142, 0.22), transparent 32rem),
-      radial-gradient(circle at 92% 96%, rgba(139, 211, 215, 0.24), transparent 34rem),
+      radial-gradient(circle at 3% 6%, rgba(246,176,142,0.34), transparent 34rem),
+      radial-gradient(circle at 97% 34%, rgba(139,211,215,0.26), transparent 36rem),
+      radial-gradient(circle at 8% 72%, rgba(246,176,142,0.22), transparent 32rem),
+      radial-gradient(circle at 92% 96%, rgba(139,211,215,0.24), transparent 34rem),
       var(--cream);
     background-attachment: fixed;
     font-family: Georgia, "Times New Roman", serif;
@@ -50,561 +67,629 @@
   }
 
   a { color: inherit; text-decoration: none; }
-  button { font: inherit; color: inherit; }
 
-  .wrap { width: min(1180px, 100%); margin: 0 auto; padding: 0 40px; }
+  /* The page scrolls the document. An inner overflow container would put every
+     section out of reach of window scrolling, find-on-page and assistive tech. */
+  .scroller { overflow-x: clip; }
 
-  /* ---------- nav ---------- */
-  .nav {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 24px; padding: 16px 0;
-    background: rgba(255, 248, 239, 0.88);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--line);
-  }
-  .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 700; }
-  .brand-mark {
-    width: 30px; height: 30px; border-radius: 10px;
-    background: linear-gradient(135deg, var(--coral), #f6b08e);
+  .page {
     position: relative;
-  }
-  .brand-mark::before, .brand-mark::after {
-    content: ""; position: absolute; border-radius: 50%; background: var(--cream);
-  }
-  .brand-mark::before { top: 7px; left: 7px; width: 11px; height: 11px; }
-  .brand-mark::after  { right: 7px; bottom: 8px; width: 7px; height: 7px; }
-
-  .nav-links { display: flex; gap: 6px; }
-  .nav-links a {
-    padding: 8px 14px; border-radius: 999px;
-    color: var(--ink-soft); font-size: 15px;
-  }
-  .nav-links a:hover { background: var(--teal-pale); color: var(--ink); }
-
-  /* ---------- sections ---------- */
-  section { padding: var(--step) 0 calc(var(--step) * 2); }
-  h2 {
-    margin: 0 0 16px;
-    font-size: clamp(30px, 3.6vw, 46px); font-weight: 400;
-    line-height: 1.1; letter-spacing: -0.01em;
-  }
-  .section-lead {
-    max-width: 62ch; margin: 0 0 34px;
-    color: var(--ink-soft); font-size: 18px; line-height: 1.6;
+    display: grid;
+    /* `safe` centring falls back to start when content is taller than the
+       viewport. Plain `center` pushes the overflow off both ends and makes
+       the top and bottom of a tall page permanently unreachable. */
+    align-content: safe center;
+    /* stretch, not center: .wrap centres itself with margin auto, and
+       shrink-to-fit here would collapse the grids inside it */
+    justify-items: stretch;
+    /* No 100vh floor. Forcing every section to a full screen leaves short
+       ones half empty, which is what read as an awkward gap. Content sets
+       the height; the padding keeps the rhythm even. */
+    scroll-margin-top: 58px;
+    padding: clamp(64px, 9vh, 104px) 0;
   }
 
-  /* ---------- 1. hero ---------- */
-  .hero {
-    position: relative; isolation: isolate;
-    display: grid; place-items: center;
-    min-height: calc(100vh - 63px);
-    text-align: center;
-    overflow: hidden;
+  .wrap {
+    position: relative;
+    z-index: 2;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+    padding: 0 40px;
   }
-  .hero .wrap { position: relative; z-index: 2; }
 
-  /* Real SF tiles behind the hero. Decorative only: no pan, zoom or clicks. */
-  #hero-map {
-    position: absolute; inset: 0; z-index: 0;
-    background: transparent;
+  .depth {
+    position: absolute;
+    z-index: 0;
+    inset: -30% 0;
+    /* --dy is set per-frame from scroll position; translate3d keeps it on the
+       compositor. The layer moves ~40% of scroll speed, so it reads as depth. */
+    transform: translate3d(0, var(--dy, 0px), 0);
+    will-change: transform;
     pointer-events: none;
   }
-  #hero-map .leaflet-tile-pane {
-    filter: sepia(0.28) saturate(0.72) hue-rotate(-8deg) contrast(1.06);
-    opacity: 1;
+
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(46px);
+    opacity: 0.5;
   }
+  .blob.a { top: 6%; left: -6%; width: 42vw; height: 42vw; background: rgba(246,176,142,0.55); }
+  .blob.b { right: -8%; bottom: 4%; width: 38vw; height: 38vw; background: rgba(139,211,215,0.45); }
+
+  /* Reveal once on entry, then stop touching it. A continuously-computed
+     opacity left every off-centre section semi-transparent, so mid-scroll you
+     saw two faded halves at once. */
+  .lift {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0);
+    transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.22, 0.8, 0.3, 1);
+  }
+  .lift.shown { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .depth { transform: none; }
+    .lift, .lift.shown { opacity: 1; transform: none; transition: none; }
+  }
+
+  /* ------------------------------------------------------------------ nav */
+  .nav {
+    position: fixed;
+    z-index: 60;
+    top: 0; right: 0; left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 13px 40px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255,248,239,0.82);
+    backdrop-filter: blur(10px);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: var(--t-lead); font-weight: var(--w-bold); }
+  .brand-mark {
+    position: relative; width: 30px; height: 30px;
+    border-radius: var(--r-sm);
+    background: linear-gradient(135deg, var(--coral), var(--peach));
+  }
+  .brand-mark::before, .brand-mark::after {
+    position: absolute; border-radius: 50%; background: var(--cream); content: "";
+  }
+  .brand-mark::before { top: 7px; left: 7px; width: 11px; height: 11px; }
+  .brand-mark::after { right: 7px; bottom: 8px; width: 7px; height: 7px; }
+
+  .nav-links { display: flex; gap: 4px; }
+  .nav-links a { padding: 8px 14px; border-radius: var(--r-pill); color: var(--ink-soft); font-size: var(--t-small); }
+  .nav-links a:hover { color: var(--ink); background: var(--teal-pale); }
+
+  /* ------------------------------------------------------------- headings */
+  h2 { margin: 0 0 14px; font-size: var(--t-h2); font-weight: var(--w-normal); line-height: 1.1; letter-spacing: -0.01em; }
+  .lead { max-width: 62ch; margin: 0 0 30px; color: var(--ink-soft); font-size: var(--t-lead); line-height: 1.6; }
+
+  /* -------------------------------------------------------------- 1 hero */
+  .hero { min-height: 100vh; overflow: hidden; text-align: center; }
+  #hero-map { position: absolute; z-index: 0; inset: 0; background: transparent; pointer-events: none; }
+  #hero-map .leaflet-tile-pane { filter: sepia(0.28) saturate(0.72) hue-rotate(-8deg) contrast(1.06); }
   #hero-map .leaflet-control-container { display: none; }
-
-  /* Scrim: opaque enough directly behind the headline to keep it readable,
-     then clears fast so the streets are actually visible around it. */
   .hero::after {
-    content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    position: absolute; z-index: 1; inset: 0; content: ""; pointer-events: none;
     background:
-      radial-gradient(ellipse 52% 40% at 50% 44%,
-        rgba(255,248,239,0.88) 0%,
-        rgba(255,248,239,0.55) 48%,
-        rgba(255,248,239,0) 100%),
-      linear-gradient(180deg,
-        var(--cream) 0%,
-        rgba(255,248,239,0) 16%,
-        rgba(255,248,239,0) 80%,
-        var(--cream) 100%);
+      radial-gradient(ellipse 52% 40% at 50% 46%, rgba(255,248,239,0.9) 0%, rgba(255,248,239,0.55) 48%, rgba(255,248,239,0) 100%),
+      linear-gradient(180deg, rgba(255,248,239,0.85) 0%, rgba(255,248,239,0) 26%, rgba(255,248,239,0) 62%, rgba(255,248,239,0.92) 92%, var(--cream) 100%);
   }
-
-  .map-credit {
-    position: absolute; z-index: 2; right: 14px; bottom: 10px;
-    color: var(--ink-faint); font-size: 10px; opacity: 0.75;
-  }
-  .hero h1 {
-    max-width: 15ch; margin: 0 auto 26px;
-    font-size: clamp(46px, 7.4vw, 92px); font-weight: 400;
-    line-height: 1.02; letter-spacing: -0.02em;
-  }
-  .hero p {
-    max-width: 60ch; margin: 0 auto 40px;
-    color: var(--ink-soft); font-size: clamp(17px, 1.6vw, 21px); line-height: 1.6;
-  }
+  .hero h1 { max-width: 15ch; margin: 0 auto 24px; font-size: var(--t-display); font-weight: var(--w-normal); line-height: 1.02; letter-spacing: -0.02em; }
+  .hero-sub { max-width: 58ch; margin: 0 auto 36px; color: var(--ink-soft); font-size: var(--t-lead); line-height: 1.6; }
   .cta-row { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center;
-    min-height: 52px; padding: 0 26px; border-radius: 999px;
-    font-size: 16px; cursor: pointer; border: 1px solid transparent;
-    transition: transform 0.12s ease;
+    min-height: 52px; padding: 0 26px;
+    border: 1px solid transparent; border-radius: var(--r-pill);
+    font-size: var(--t-body); cursor: pointer; transition: transform 0.12s ease;
   }
   .btn:hover { transform: translateY(-1px); }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--coral), #ef7c5e);
-    color: var(--cream);
-    box-shadow: 0 10px 22px rgba(222, 91, 73, 0.28);
-  }
-  .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  .btn-primary { color: var(--cream); background: linear-gradient(135deg, var(--coral), #ef7c5e); box-shadow: 0 10px 22px rgba(222,91,73,0.28); }
+  .btn-ghost { color: var(--ink); border-color: var(--line); background: transparent; }
   .btn-ghost:hover { border-color: var(--teal); background: var(--teal-pale); }
+  .map-credit { position: absolute; z-index: 2; right: 16px; bottom: 12px; color: var(--ink-faint); font-size: var(--t-micro); opacity: 0.7; }
 
-  /* ---------- 2. problem ---------- */
-  .problem { border-top: 1px solid var(--peach-deep); }
-  .fail-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
-  .fail {
-    display: flex; flex-direction: column;
-    padding: 26px; border: 1px solid var(--line); border-radius: 18px;
-    background: rgba(255, 252, 247, 0.86);
+  /* ------------------------------------------------- shared card surface */
+  .card {
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    background: rgba(255,252,247,0.88);
     box-shadow: var(--shadow-warm);
   }
+
+  /* --------------------------------------------------------------- 2 why */
+  .fail-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 18px; }
+  .fail { display: flex; flex-direction: column; padding: 26px; }
   .fail-tag {
-    align-self: flex-start; margin-bottom: 16px;
-    padding: 4px 11px; border-radius: 999px;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    align-self: flex-start; margin-bottom: 14px; padding: 4px 11px;
+    border-radius: var(--r-pill); font-size: var(--t-micro); font-weight: var(--w-bold);
+    letter-spacing: 0.08em; text-transform: uppercase;
   }
-  .fail-tag.quiet { background: #f0e7db; color: #8a6a4a; }
-  .fail-tag.loud  { background: #fbe4df; color: var(--coral-deep); }
-  .fail-tag.astray{ background: var(--teal-pale); color: #2f6b64; }
-  .fail h3 { margin: 0 0 10px; font-size: 21px; font-weight: 400; line-height: 1.25; }
-  .fail p { margin: 0; color: var(--ink-soft); font-size: 15px; line-height: 1.6; }
+  .fail-tag.quiet { color: #8a6a4a; background: #f0e7db; }
+  .fail-tag.loud { color: var(--coral-deep); background: #fbe4df; }
+  .fail-tag.astray { color: #2f6b64; background: var(--teal-pale); }
+  .fail h3 { margin: 0 0 10px; font-size: var(--t-h4); font-weight: var(--w-normal); line-height: 1.25; }
+  .fail p { margin: 0; color: var(--ink-soft); font-size: var(--t-body); line-height: 1.6; }
 
-  /* ---------- charts ----------
-     Palette validated with the dataviz validator: #de5b49 / #0b8f80 pass
-     lightness, chroma, CVD separation, normal-vision and contrast checks. */
-  .charts {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--gap); margin-top: 34px;
+  /* ------------------------------------------------------------- 3 cases
+     Marks #de5b49 / #0b8f80 passed the dataviz validator on this surface. */
+  .case-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+  .case { margin: 0; padding: 24px; }
+  .case-where {
+    display: block; margin-bottom: 8px; color: var(--ink-faint);
+    font-size: var(--t-micro); font-weight: var(--w-bold);
+    letter-spacing: 0.08em; text-transform: uppercase;
   }
-  .chart {
-    margin: 0; padding: 26px;
-    border: 1px solid var(--line); border-radius: 18px;
-    background: rgba(255, 252, 247, 0.9);
-    box-shadow: var(--shadow-warm);
-  }
-  .chart figcaption { margin-bottom: 18px; }
-  .chart h3 { margin: 0 0 5px; font-size: 19px; font-weight: 400; line-height: 1.3; }
-  .chart-sub { margin: 0; color: var(--ink-faint); font-size: 13.5px; line-height: 1.5; }
-  .chart-note {
-    margin: 16px 0 0; color: var(--ink-faint); font-size: 13px; line-height: 1.55;
-  }
+  .case-what { margin: 0 0 18px; padding-bottom: 16px; border-bottom: 1px dashed var(--line); font-size: var(--t-body); line-height: 1.5; }
+  .case h3 { margin: 0 0 4px; font-size: var(--t-h4); font-weight: var(--w-normal); line-height: 1.25; }
+  .case-sub { margin: 0 0 14px; color: var(--ink-faint); font-size: var(--t-small); }
+  .case-note { margin: 14px 0 0; color: var(--ink-faint); font-size: var(--t-fine); line-height: 1.5; }
 
-  .legend { display: flex; gap: 16px; margin-bottom: 16px; font-size: 13px; color: var(--ink-soft); }
+  .legend { display: flex; gap: 16px; margin-bottom: 12px; color: var(--ink-soft); font-size: var(--t-fine); }
   .legend span { display: flex; align-items: center; gap: 7px; }
-  .sw { width: 11px; height: 11px; border-radius: 3px; }
+  .sw { width: 11px; height: 11px; border-radius: var(--r-sm); }
 
-  .bars { display: grid; gap: 11px; }
-  .row { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 12px; align-items: center; }
-  .row-label { color: var(--ink-soft); font-size: 13.5px; text-align: right; }
-  .track { position: relative; display: flex; height: 30px; }
-  /* 2px surface gap between adjacent fills, 4px rounded outer data-ends */
-  .seg {
-    position: relative; display: flex; align-items: center;
-    min-width: 0; transition: filter 0.12s ease;
-  }
-  .seg span {
-    padding: 0 9px; font-size: 12px; color: #fff; white-space: nowrap;
-  }
-  .seg.yes { background: #0b8f80; border-radius: 4px 0 0 4px; margin-right: 2px; }
-  .seg.no  { background: #de5b49; border-radius: 0 4px 4px 0; justify-content: flex-end; }
+  .bars { display: grid; gap: 9px; }
+  .bar-row { display: grid; grid-template-columns: 78px minmax(0,1fr); gap: 12px; align-items: center; }
+  .bar-label { color: var(--ink-soft); font-size: var(--t-small); text-align: right; }
+  .track { position: relative; display: flex; height: 28px; }
+  .seg { position: relative; display: flex; align-items: center; min-width: 0; transition: filter 0.12s ease; }
+  .seg span { padding: 0 9px; color: #fff; font-size: var(--t-fine); white-space: nowrap; }
+  .seg.yes { margin-right: 2px; border-radius: 4px 0 0 4px; background: #0b8f80; }
+  .seg.no { justify-content: flex-end; border-radius: 0 4px 4px 0; background: #de5b49; }
   .seg:hover { filter: brightness(1.08); }
-  .fifty {
-    position: absolute; top: -3px; bottom: -3px; left: 50%;
-    width: 2px; background: var(--ink); opacity: 0.55;
-  }
+  .fifty { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 2px; background: var(--ink); opacity: 0.55; }
 
-  .tiles { display: grid; gap: 10px; }
+  .tiles { display: grid; gap: 9px; }
   .tile {
-    display: flex; align-items: baseline; gap: 14px;
-    padding: 13px 16px; border-radius: 12px;
-    background: rgba(246, 176, 142, 0.1);
-    border: 1px solid rgba(246, 176, 142, 0.4);
+    display: flex; align-items: baseline; gap: 14px; padding: 12px 15px;
+    border: 1px solid rgba(246,176,142,0.4); border-radius: var(--r-md);
+    background: rgba(246,176,142,0.1);
   }
-  .tile-n { min-width: 78px; font-size: 34px; line-height: 1; }
-  .tile-u { margin-left: 3px; font-size: 15px; color: var(--ink-faint); }
-  .tile-l { color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
-  .tile.zero { border-color: rgba(222, 91, 73, 0.45); background: #fff5f2; }
+  .tile-n { min-width: 74px; font-size: var(--t-h2); line-height: 1; }
+  .tile-u { margin-left: 3px; color: var(--ink-faint); font-size: var(--t-body); }
+  .tile-l { color: var(--ink-soft); font-size: var(--t-small); line-height: 1.4; }
+  .tile.zero { border-color: rgba(222,91,73,0.45); background: #fff5f2; }
   .tile.zero .tile-n { color: var(--coral-deep); }
 
-  .data-table { margin-top: 22px; }
-  .data-table summary {
-    cursor: pointer; color: var(--ink-soft); font-size: 14px; padding: 6px 0;
+  /* ------------------------------------------------------ 4 how it works */
+  .how-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr) minmax(0, 0.85fr);
+    gap: 18px;
+    align-items: start;
   }
-  .data-table table { border-collapse: collapse; margin-top: 12px; font-size: 14px; }
-  .data-table th, .data-table td {
-    padding: 7px 20px 7px 0; text-align: left; border-bottom: 1px solid var(--line);
-    color: var(--ink-soft); font-weight: 400;
-  }
-  .data-table th { color: var(--ink-faint); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
 
-  /* ---------- 3. solution ---------- */
-  .solution { border-top: 1px solid var(--peach-deep); }
-  .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); }
-  .step {
-    padding: 24px; border-radius: 18px;
-    background: rgba(255, 252, 247, 0.86); border: 1px solid var(--line);
-    box-shadow: var(--shadow-warm);
+  .mini-label {
+    display: block; margin-bottom: 12px; color: var(--ink-faint);
+    font-size: var(--t-micro); font-weight: var(--w-bold);
+    letter-spacing: 0.1em; text-transform: uppercase;
   }
-  .step-n {
-    display: grid; place-items: center;
-    width: 30px; height: 30px; margin-bottom: 16px;
-    border-radius: 10px; color: var(--cream);
+
+  .inbox, .outbox { padding: 22px; }
+  .src-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+  .src-list li {
+    padding: 8px 12px; border: 1px solid var(--line); border-radius: var(--r-md);
+    background: rgba(255,248,239,0.7);
+    color: var(--ink-soft); font-size: var(--t-small);
+  }
+  .inbox-note, .outbox-note { margin: 14px 0 0; color: var(--ink-faint); font-size: var(--t-fine); line-height: 1.5; }
+  .outbox { border-color: rgba(222,91,73,0.4); background: linear-gradient(160deg, rgba(255,236,228,0.9), rgba(255,252,247,0.9)); }
+  .outbox-line { margin: 0; font-size: var(--t-h4); line-height: 1.3; }
+  .outbox-line b { font-weight: var(--w-normal); }
+
+  /* The spine is the point: this is a pipeline, not four unrelated boxes. */
+  .flow { margin: 0; padding: 0 0 0 6px; list-style: none; display: grid; gap: 4px; }
+  .flow li {
+    position: relative;
+    padding: 0 0 20px 34px;
+    border-left: 2px solid var(--peach-deep);
+  }
+  .flow li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .flow-n {
+    position: absolute; top: -2px; left: -15px;
+    display: grid; place-items: center; width: 28px; height: 28px;
+    border-radius: 50%; color: var(--cream);
     background: linear-gradient(135deg, var(--coral), var(--peach));
-    box-shadow: 0 6px 14px rgba(222, 91, 73, 0.24);
-    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(222,91,73,0.28);
+    font-size: var(--t-small);
   }
-  .step h3 { margin: 0 0 8px; font-size: 18px; font-weight: 400; }
-  .step p { margin: 0; color: var(--ink-soft); font-size: 14.5px; line-height: 1.55; }
+  .flow h3 { margin: 2px 0 5px; font-size: var(--t-lead); font-weight: var(--w-normal); }
+  .flow p { margin: 0; color: var(--ink-soft); font-size: var(--t-small); line-height: 1.55; }
 
-  .rule-strip {
-    display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px;
-    padding: 18px 22px; border: 1px dashed var(--peach); border-radius: 16px;
-    background: rgba(246, 176, 142, 0.09);
-    color: var(--ink-soft); font-size: 14.5px; line-height: 1.6;
-  }
-  .rule-strip b { color: var(--ink); font-weight: 700; }
 
-  /* ---------- 4. pressing now ---------- */
-  .pressing { border-top: 1px solid var(--peach-deep); }
-  .feed { display: grid; gap: 12px; }
-  .item {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto;
-    gap: 20px; align-items: center;
-    padding: 20px 24px; border: 1px solid var(--line); border-radius: 16px;
-    background: rgba(255, 252, 247, 0.86);
-    box-shadow: var(--shadow-warm);
+  /* --------------------------------------------------------- 5 pressing */
+  .feed { display: grid; gap: 11px; }
+  .feed-item { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 20px; align-items: center; padding: 17px 22px; }
+  .feed-item.hot {
+    border-color: rgba(222,91,73,0.45);
+    background: linear-gradient(100deg, rgba(255,236,228,0.95), rgba(255,252,247,0.88));
   }
-  .item.hot {
-    border-color: rgba(222, 91, 73, 0.45);
-    background: linear-gradient(100deg, rgba(255, 236, 228, 0.95), rgba(255, 252, 247, 0.88));
-  }
-  .item-title { font-size: 19px; line-height: 1.3; }
-  .item-meta { margin-top: 7px; color: var(--ink-faint); font-size: 13.5px; }
-  .item-meta span + span::before { content: " · "; }
+  .feed-title { font-size: var(--t-lead); line-height: 1.3; }
+  .feed-meta { margin-top: 5px; color: var(--ink-faint); font-size: var(--t-small); }
   .status {
-    padding: 5px 12px; border-radius: 999px;
-    font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
-    white-space: nowrap;
+    padding: 5px 12px; border-radius: var(--r-pill);
+    font-size: var(--t-micro); font-weight: var(--w-bold);
+    letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap;
   }
-  .status.review { background: #fbe4df; color: var(--coral-deep); }
-  .status.emerging { background: #fdf1e2; color: #a07a4a; }
-  .status.watch { background: var(--teal-pale); color: #2f6b64; }
+  .status.review { color: var(--coral-deep); background: #fbe4df; }
+  .status.emerging { color: #a07a4a; background: #fdf1e2; }
+  .status.watch { color: #2f6b64; background: var(--teal-pale); }
   .count { text-align: right; }
-  .count-n { font-size: 30px; line-height: 1; }
-  .count-l { margin-top: 5px; color: var(--ink-faint); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .count-n { font-size: var(--t-h3); line-height: 1; }
+  .count-l { margin-top: 4px; color: var(--ink-faint); font-size: var(--t-micro); letter-spacing: 0.08em; text-transform: uppercase; }
+  .feed-foot { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-top: 20px; }
+  .feed-note { margin: 0; color: var(--ink-faint); font-size: var(--t-fine); }
 
-  .feed-foot {
-    margin-top: 22px; display: flex; flex-wrap: wrap; gap: 16px;
-    align-items: center; justify-content: space-between;
+  /* ------------------------------------------------------------- footer */
+  .foot {
+    padding: 52px 40px 28px;
+    border-top: 1px solid var(--peach-deep);
+    background: rgba(255, 252, 247, 0.7);
   }
-  .mock-flag {
-    color: var(--ink-faint); font-size: 13px; line-height: 1.55;
+  .foot-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+    width: min(1180px, 100%);
+    margin: 0 auto;
+  }
+  .foot-brand { display: flex; gap: 14px; align-items: flex-start; }
+  .foot-brand strong { font-size: var(--t-lead); font-weight: var(--w-bold); }
+  .foot-brand p { margin: 6px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: var(--t-small); line-height: 1.55; }
+  .foot-col ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  .foot-col li { color: var(--ink-soft); font-size: var(--t-small); line-height: 1.5; }
+  .foot-rule {
+    display: flex; flex-wrap: wrap; gap: 16px;
+    justify-content: space-between;
+    width: min(1180px, 100%); margin: 34px auto 0;
+    padding-top: 18px; border-top: 1px solid var(--line);
+    color: var(--ink-faint); font-size: var(--t-fine);
   }
 
-  @media (max-width: 900px) {
+  /* Short viewports (laptop chrome, preview panes) cannot fit a full page.
+     Stop pretending they can: drop the 100vh floor and the snapping. */
+  @media (max-height: 800px) {
+    .hero { min-height: 92vh; }
+  }
+
+  @media (max-width: 940px) {
     .wrap { padding: 0 20px; }
-    .fail-grid, .steps, .charts { grid-template-columns: 1fr; }
-    .row { grid-template-columns: 70px minmax(0, 1fr); }
-    .item { grid-template-columns: 1fr; }
+    .fail-grid, .steps, .case-grid, .how-grid, .foot-wrap { grid-template-columns: 1fr; }
+    .feed-item { grid-template-columns: 1fr; }
     .count { text-align: left; }
+    .page { padding: 56px 0; }
+    .hero { min-height: auto; padding-top: 96px; }
   }
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;padding-top:0;padding-bottom:0">
-    <a class="brand" href="#top"><span class="brand-mark"></span> Quorum</a>
-    <div class="nav-links">
-      <a href="#problem">The problem</a>
-      <a href="#solution">How it works</a>
-      <a href="#pressing">Pressing now</a>
-    </div>
+  <a class="brand" href="#hero"><span class="brand-mark"></span> Quorum</a>
+  <div class="nav-links">
+    <a href="#why">Why</a>
+    <a href="#cases">Cases</a>
+    <a href="#how">How it works</a>
+    <a href="#now">Pressing now</a>
   </div>
 </nav>
 
-<!-- 1 ─────────────────────────────────────────── -->
-<section class="hero" id="top">
-  <div id="hero-map" aria-hidden="true"></div>
-  <span class="map-credit">© OpenStreetMap contributors © CARTO</span>
-  <div class="wrap">
-    <h1>Make community objections count.</h1>
-    <p>
-      Who decides, what action counts, and where your community's effort should go —
-      especially when the impact zone and the decision zone are not the same place.
-    </p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#pressing">Analyse a civic action</a>
-      <a class="btn btn-ghost" href="#solution">See how it works</a>
+<div class="scroller" id="scroller">
+
+  <!-- 1 ─────────────────────────────────── -->
+  <section class="page hero" id="hero">
+    <div id="hero-map" aria-hidden="true"></div>
+    <span class="map-credit">© OpenStreetMap contributors © CARTO</span>
+    <div class="wrap lift">
+      <h1>Make community objections count.</h1>
+      <p class="hero-sub">
+        Who decides, what action counts, and where your community's effort should go —
+        especially when the impact zone and the decision zone are not the same place.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#now">Analyse a civic action</a>
+        <a class="btn btn-ghost" href="#how">See how it works</a>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- 2 ─────────────────────────────────────────── -->
-<section class="problem" id="problem">
-  <div class="wrap">
-    <h2>Caring is not the missing ingredient.</h2>
-    <p class="section-lead">
-      Civic engagement fails in three ways, and they need opposite fixes.
-    </p>
-
-    <div class="fail-grid">
-      <article class="fail">
-        <span class="fail-tag quiet">Heard too little</span>
-        <h3>It never becomes countable</h3>
-        <p>People hold a position and tell each other. It never reaches the channel that counts, before the deadline.</p>
-      </article>
-
-      <article class="fail">
-        <span class="fail-tag loud">Heard too much</span>
-        <h3>Volume arrives, standing does not</h3>
-        <p>Hundreds of near-identical letters get recognised as bulk and weighed as one. The countable unit is a distinct submitter.</p>
-      </article>
-
-      <article class="fail">
-        <span class="fail-tag astray">Heard by the wrong people</span>
-        <h3>Aimed at the wrong electorate</h3>
-        <p>Well-funded organising, pointed at the people already affected — who already agree — not at whoever decides.</p>
-      </article>
+  <!-- 2 ─────────────────────────────────── -->
+  <section class="page" id="why">
+    <div class="depth" aria-hidden="true"><i class="blob a"></i><i class="blob b"></i></div>
+    <div class="wrap lift">
+      <h2>Caring is not the missing ingredient.</h2>
+      <p class="lead">Civic engagement fails in three ways, and they need opposite fixes.</p>
+      <div class="fail-grid">
+        <article class="fail card">
+          <span class="fail-tag quiet">Heard too little</span>
+          <h3>It never becomes countable</h3>
+          <p>People hold a position and tell each other. It never reaches the channel that counts, before the deadline.</p>
+        </article>
+        <article class="fail card">
+          <span class="fail-tag loud">Heard too much</span>
+          <h3>Volume arrives, standing does not</h3>
+          <p>Hundreds of near-identical letters get recognised as bulk and weighed as one. The countable unit is a distinct submitter.</p>
+        </article>
+        <article class="fail card">
+          <span class="fail-tag astray">Heard by the wrong people</span>
+          <h3>Aimed at the wrong electorate</h3>
+          <p>Well-funded organising, pointed at the people already affected — who already agree — not at whoever decides.</p>
+        </article>
+      </div>
     </div>
+  </section>
 
-    <div class="charts">
-      <!-- Chart 1 — polarity, so a diverging split bar centred on 50% -->
-      <figure class="chart">
-        <figcaption>
+  <!-- 3 ─────────────────────────────────── -->
+  <section class="page" id="cases">
+    <div class="depth" aria-hidden="true">
+      <i class="blob b" style="top:8%;left:-6%"></i>
+      <i class="blob a" style="right:-6%;bottom:6%;left:auto"></i>
+    </div>
+    <div class="wrap lift">
+      <h2>Where it has already happened.</h2>
+      <p class="lead">Two San Francisco cases, and the evidence for each.</p>
+
+      <div class="case-grid">
+        <figure class="case card">
+          <span class="case-where">Sunset / Richmond · Nov 2024</span>
+          <p class="case-what">
+            Opponents spent $269,000, filed a CEQA challenge and won a recall.
+            They never campaigned east of West Portal — where the vote was decided.
+          </p>
           <h3>Proposition K — won the westside, lost the city</h3>
-          <p class="chart-sub">Vote share, Nov 2024. The line is 50%.</p>
-        </figcaption>
+          <p class="case-sub">Vote share. The line is 50%.</p>
 
-        <div class="legend">
-          <span><i class="sw" style="background:#0b8f80"></i> Yes</span>
-          <span><i class="sw" style="background:#de5b49"></i> No</span>
-        </div>
+          <div class="legend">
+            <span><i class="sw" style="background:#0b8f80"></i> Yes</span>
+            <span><i class="sw" style="background:#de5b49"></i> No</span>
+          </div>
 
-        <div class="bars" role="img"
-             aria-label="Prop K vote share: citywide 54.7% yes; Sunset 40% yes; Richmond 30% yes; Districts 1, 4, 7 and 11 combined 39% yes.">
-          <div class="row">
-            <span class="row-label">Citywide</span>
-            <div class="track">
-              <div class="seg yes" style="width:54.73%" title="Yes 54.7%"><span>54.7%</span></div>
-              <div class="seg no"  style="width:45.27%" title="No 45.3%"><span>45.3%</span></div>
-              <div class="fifty" aria-hidden="true"></div>
-            </div>
+          <div class="bars" role="img"
+               aria-label="Prop K vote share: citywide 54.7% yes; Sunset 40%; Richmond 30%; Districts 1, 4, 7 and 11 combined 39%.">
+            <div class="bar-row"><span class="bar-label">Citywide</span>
+              <div class="track">
+                <div class="seg yes" style="width:54.7%" title="Yes 54.7%"><span>54.7%</span></div>
+                <div class="seg no" style="width:45.3%" title="No 45.3%"><span>45.3%</span></div>
+                <div class="fifty"></div>
+              </div></div>
+            <div class="bar-row"><span class="bar-label">Sunset</span>
+              <div class="track">
+                <div class="seg yes" style="width:40%" title="Yes 40%"><span>40%</span></div>
+                <div class="seg no" style="width:60%" title="No 60%"><span>60%</span></div>
+                <div class="fifty"></div>
+              </div></div>
+            <div class="bar-row"><span class="bar-label">Richmond</span>
+              <div class="track">
+                <div class="seg yes" style="width:30%" title="Yes 30%"><span>30%</span></div>
+                <div class="seg no" style="width:70%" title="No 70%"><span>70%</span></div>
+                <div class="fifty"></div>
+              </div></div>
+            <div class="bar-row"><span class="bar-label">D1·4·7·11</span>
+              <div class="track">
+                <div class="seg yes" style="width:39%" title="Yes 39%"><span>39%</span></div>
+                <div class="seg no" style="width:61%" title="No 61%"><span>61%</span></div>
+                <div class="fifty"></div>
+              </div></div>
           </div>
-          <div class="row">
-            <span class="row-label">Sunset</span>
-            <div class="track">
-              <div class="seg yes" style="width:40%" title="Yes 40%"><span>40%</span></div>
-              <div class="seg no"  style="width:60%" title="No 60%"><span>60%</span></div>
-              <div class="fifty" aria-hidden="true"></div>
-            </div>
-          </div>
-          <div class="row">
-            <span class="row-label">Richmond</span>
-            <div class="track">
-              <div class="seg yes" style="width:30%" title="Yes 30%"><span>30%</span></div>
-              <div class="seg no"  style="width:70%" title="No 70%"><span>70%</span></div>
-              <div class="fifty" aria-hidden="true"></div>
-            </div>
-          </div>
-          <div class="row">
-            <span class="row-label">D1·4·7·11</span>
-            <div class="track">
-              <div class="seg yes" style="width:39%" title="Yes 39%"><span>39%</span></div>
-              <div class="seg no"  style="width:61%" title="No 61%"><span>61%</span></div>
-              <div class="fifty" aria-hidden="true"></div>
-            </div>
-          </div>
-        </div>
-        <p class="chart-note">Every westside bar sits left of the line. The one that counted sits right of it.</p>
-      </figure>
+          <p class="case-note">Every westside bar sits left of the line. The one that counted sits right of it.</p>
+        </figure>
 
-      <!-- Chart 2 — a single value against zero is a stat tile, not a bar chart -->
-      <figure class="chart">
-        <figcaption>
+        <figure class="case card">
+          <span class="case-where">Chinatown · District 3 · 2026</span>
+          <p class="case-what">
+            CCBA, a five-decade board member and 150+ merchants opposed the bridge
+            removal. The supervisor said his office received no communication on it.
+          </p>
           <h3>Portsmouth Square — opposition vs the record</h3>
-          <p class="chart-sub">What the community held, and what the file held.</p>
-        </figcaption>
+          <p class="case-sub">What the community held, and what the file held.</p>
 
-        <div class="tiles">
-          <div class="tile">
-            <div class="tile-n">176<span class="tile-u">yrs</span></div>
-            <div class="tile-l">CCBA, opposed and uninvited</div>
+          <div class="tiles">
+            <div class="tile"><div class="tile-n">176<span class="tile-u">yrs</span></div><div class="tile-l">CCBA, opposed and uninvited</div></div>
+            <div class="tile"><div class="tile-n">150<span class="tile-u">+</span></div><div class="tile-l">Merchants represented in protest</div></div>
+            <div class="tile zero"><div class="tile-n">0</div><div class="tile-l">Communications the D3 supervisor's office received</div></div>
           </div>
-          <div class="tile">
-            <div class="tile-n">150<span class="tile-u">+</span></div>
-            <div class="tile-l">Merchants represented in protest</div>
+          <p class="case-note">The zero is the whole story.</p>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 ─────────────────────────────────── -->
+  <section class="page" id="how">
+    <div class="depth" aria-hidden="true"><i class="blob a"></i><i class="blob b"></i></div>
+    <div class="wrap lift">
+      <h2>Quorum puts the whole picture in one place.</h2>
+      <p class="lead">Scattered signal in. One countable action out.</p>
+
+      <div class="how-grid">
+        <aside class="inbox card">
+          <span class="mini-label">Signal in</span>
+          <ul class="src-list">
+            <li>311 service records</li>
+            <li>Legistar agendas &amp; minutes</li>
+            <li>Local and in-language press</li>
+            <li>Community organisations</li>
+          </ul>
+          <p class="inbox-note">Scattered across four systems that never speak to each other.</p>
+        </aside>
+
+        <ol class="flow">
+          <li>
+            <span class="flow-n">1</span>
+            <h3>Aggregate</h3>
+            <p>Deduplicated into a single issue, so ten reports of one problem count as one problem.</p>
+          </li>
+          <li>
+            <span class="flow-n">2</span>
+            <h3>Find who decides</h3>
+            <p>The body that approves it — and, crucially, the constituency that body answers to.</p>
+          </li>
+          <li>
+            <span class="flow-n">3</span>
+            <h3>Retrieve what counts</h3>
+            <p>Channel, format and deadline, each carrying a source link and a retrieval date.</p>
+          </li>
+          <li>
+            <span class="flow-n">4</span>
+            <h3>Aim it</h3>
+            <p>Compare impact zone against decision zone. When they differ, say so and re-aim.</p>
+          </li>
+        </ol>
+
+        <aside class="outbox card">
+          <span class="mini-label">Action out</span>
+          <p class="outbox-line"><b>One countable submission.</b></p>
+          <p class="outbox-note">A named body, a named channel, a dated deadline — and the people already organising alongside you.</p>
+        </aside>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5 ─────────────────────────────────── -->
+  <section class="page" id="now">
+    <div class="depth" aria-hidden="true">
+      <i class="blob b" style="top:10%;left:-8%"></i>
+      <i class="blob a" style="right:-8%;bottom:8%;left:auto"></i>
+    </div>
+    <div class="wrap lift">
+      <h2>What is building across San Francisco.</h2>
+      <p class="lead">Ranked by corroborated signal, not raw volume.</p>
+
+      <div class="feed">
+        <article class="feed-item card hot">
+          <div>
+            <div class="feed-title">Portsmouth Square — pedestrian bridge removal</div>
+            <div class="feed-meta">Chinatown · D3 · 4 source types · +240% this week</div>
           </div>
-          <div class="tile zero">
-            <div class="tile-n">0</div>
-            <div class="tile-l">Communications the D3 supervisor's office received</div>
+          <div class="count"><div class="count-n">19</div><div class="count-l">records</div>
+            <div style="margin-top:8px"><span class="status review">Review needed</span></div></div>
+        </article>
+        <article class="feed-item card">
+          <div>
+            <div class="feed-title">Great Highway follow-up measure — signature gathering</div>
+            <div class="feed-meta">Sunset / Richmond · citywide · 3 source types</div>
           </div>
-        </div>
-        <p class="chart-note">The zero is the whole story.</p>
-      </figure>
+          <div class="count"><div class="count-n">12</div><div class="count-l">records</div>
+            <div style="margin-top:8px"><span class="status emerging">Emerging</span></div></div>
+        </article>
+        <article class="feed-item card">
+          <div>
+            <div class="feed-title">Tenderloin SRO habitability complaints</div>
+            <div class="feed-meta">Tenderloin · D6 · 2 source types</div>
+          </div>
+          <div class="count"><div class="count-n">8</div><div class="count-l">records</div>
+            <div style="margin-top:8px"><span class="status emerging">Emerging</span></div></div>
+        </article>
+        <article class="feed-item card">
+          <div>
+            <div class="feed-title">Mission Street bus lane extension</div>
+            <div class="feed-meta">Mission · D9 · 2 source types</div>
+          </div>
+          <div class="count"><div class="count-n">6</div><div class="count-l">records</div>
+            <div style="margin-top:8px"><span class="status watch">Monitoring</span></div></div>
+        </article>
+      </div>
+
+      <div class="feed-foot">
+        <p class="feed-note">Mockup — illustrative counts, not live data.</p>
+        <a class="btn btn-primary" href="#hero">Analyse a civic action</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="foot">
+  <div class="foot-wrap">
+    <div class="foot-brand">
+      <span class="brand-mark"></span>
+      <div>
+        <strong>Quorum</strong>
+        <p>Routing community objections to the body, channel and deadline that actually count.</p>
+      </div>
     </div>
 
-    <details class="data-table">
-      <summary>View the underlying numbers</summary>
-      <table>
-        <thead><tr><th>Geography</th><th>Yes</th><th>No</th></tr></thead>
-        <tbody>
-          <tr><td>Citywide</td><td>54.73%</td><td>45.27%</td></tr>
-          <tr><td>Sunset</td><td>~40%</td><td>~60%</td></tr>
-          <tr><td>Richmond</td><td>~30%</td><td>~70%</td></tr>
-          <tr><td>Districts 1, 4, 7, 11</td><td>39%</td><td>61%</td></tr>
-        </tbody>
-      </table>
-      <p class="chart-note">Prop K, Nov 2024. District figures approximate.</p>
-    </details>
-  </div>
-</section>
-
-<!-- 3 ─────────────────────────────────────────── -->
-<section class="solution" id="solution">
-  <div class="wrap">
-    <h2>Quorum puts the whole picture in one place.</h2>
-    <p class="section-lead">Scattered signal in. One countable action out.</p>
-
-    <div class="steps">
-      <article class="step">
-        <div class="step-n">1</div>
-        <h3>Aggregate</h3>
-        <p>311, agendas, press and community records — deduplicated into one issue.</p>
-      </article>
-      <article class="step">
-        <div class="step-n">2</div>
-        <h3>Find who decides</h3>
-        <p>The body that approves it, and who that body answers to.</p>
-      </article>
-      <article class="step">
-        <div class="step-n">3</div>
-        <h3>Retrieve what counts</h3>
-        <p>Channel, format and deadline — each with a source and a date.</p>
-      </article>
-      <article class="step">
-        <div class="step-n">4</div>
-        <h3>Aim it</h3>
-        <p>Impact zone vs decision zone. When they differ, re-aim.</p>
-      </article>
+    <div class="foot-col">
+      <span class="mini-label">Sources</span>
+      <ul>
+        <li>SF 311 / DataSF</li>
+        <li>SF Legistar</li>
+        <li>SF Department of Elections</li>
+        <li>SF Recreation and Park</li>
+        <li>OpenStreetMap contributors, CARTO</li>
+      </ul>
     </div>
 
-    <div class="rule-strip">
-      <span><b>Retrieved, never generated.</b> No source, no claim — Quorum shows a gap instead of a guess.</span>
-    </div>
-  </div>
-</section>
-
-<!-- 4 ─────────────────────────────────────────── -->
-<section class="pressing" id="pressing">
-  <div class="wrap">
-    <h2>What is building across San Francisco.</h2>
-    <p class="section-lead">Ranked by corroborated signal, not raw volume.</p>
-
-    <div class="feed">
-      <article class="item hot">
-        <div>
-          <div class="item-title">Portsmouth Square — pedestrian bridge removal</div>
-          <div class="item-meta">
-            <span>Chinatown · D3</span><span>4 source types</span><span>+240% this week</span>
-          </div>
-        </div>
-        <div class="count">
-          <div class="count-n">19</div>
-          <div class="count-l">records</div>
-          <div style="margin-top:10px"><span class="status review">Review needed</span></div>
-        </div>
-      </article>
-
-      <article class="item">
-        <div>
-          <div class="item-title">Great Highway follow-up measure — signature gathering</div>
-          <div class="item-meta">
-            <span>Sunset / Richmond · citywide</span><span>3 source types</span><span>rising</span>
-          </div>
-        </div>
-        <div class="count">
-          <div class="count-n">12</div>
-          <div class="count-l">records</div>
-          <div style="margin-top:10px"><span class="status emerging">Emerging</span></div>
-        </div>
-      </article>
-
-      <article class="item">
-        <div>
-          <div class="item-title">Tenderloin SRO habitability complaints</div>
-          <div class="item-meta">
-            <span>Tenderloin · D6</span><span>2 source types</span><span>steady</span>
-          </div>
-        </div>
-        <div class="count">
-          <div class="count-n">8</div>
-          <div class="count-l">records</div>
-          <div style="margin-top:10px"><span class="status emerging">Emerging</span></div>
-        </div>
-      </article>
-
-      <article class="item">
-        <div>
-          <div class="item-title">Mission Street bus lane extension</div>
-          <div class="item-meta">
-            <span>Mission · D9</span><span>2 source types</span><span>steady</span>
-          </div>
-        </div>
-        <div class="count">
-          <div class="count-n">6</div>
-          <div class="count-l">records</div>
-          <div style="margin-top:10px"><span class="status watch">Monitoring</span></div>
-        </div>
-      </article>
-
-      <article class="item">
-        <div>
-          <div class="item-title">Balboa Park station accessibility</div>
-          <div class="item-meta">
-            <span>Excelsior · D11</span><span>1 source type</span><span>new</span>
-          </div>
-        </div>
-        <div class="count">
-          <div class="count-n">3</div>
-          <div class="count-l">records</div>
-          <div style="margin-top:10px"><span class="status watch">Monitoring</span></div>
-        </div>
-      </article>
-    </div>
-
-    <div class="feed-foot">
-      <p class="mock-flag">Mockup — illustrative counts, not live data.</p>
-      <a class="btn btn-primary" href="#top">Analyse a civic action</a>
+    <div class="foot-col">
+      <span class="mini-label">Honest limits</span>
+      <ul>
+        <li>Procedural facts are retrieved and cited, never generated.</li>
+        <li>Where no source exists, Quorum shows a gap.</li>
+        <li>This page is a mockup; counts are illustrative.</li>
+      </ul>
     </div>
   </div>
-</section>
+
+  <div class="foot-rule">
+    <span>JacHacks SF 2026</span>
+    <span>Neutral on outcome. Partisan only about process.</span>
+  </div>
+</footer>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   // Decorative backdrop only — every interaction handler is off.
   const heroMap = L.map("hero-map", {
-    center: [37.7749, -122.4310],
-    zoom: 13,
+    center: [37.7749, -122.4310], zoom: 13,
     zoomControl: false, dragging: false, scrollWheelZoom: false,
     doubleClickZoom: false, touchZoom: false, boxZoom: false,
     keyboard: false, attributionControl: false
   });
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-    maxZoom: 19
-  }).addTo(heroMap);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(heroMap);
+
+  // ---- parallax --------------------------------------------------------
+  // JS sets --p (content settle) and --dy (background drift) per page.
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pages = [...document.querySelectorAll(".page")];
+
+  // Reveal once, then never touch opacity again.
+  if (reduce) {
+    document.querySelectorAll(".lift").forEach(el => el.classList.add("shown"));
+  } else {
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) { e.target.classList.add("shown"); obs.unobserve(e.target); }
+      });
+    }, { rootMargin: "0px 0px -12% 0px", threshold: 0.08 });
+    document.querySelectorAll(".lift").forEach(el => io.observe(el));
+  }
+
+  // Parallax is now only the background drift — continuous, subtle, and it
+  // never affects how readable the content is.
+  let ticking = false;
+  function frame() {
+    ticking = false;
+    const mid = window.innerHeight / 2;
+    pages.forEach(page => {
+      const depth = page.querySelector(".depth");
+      if (!depth) return;
+      const r = page.getBoundingClientRect();
+      const centre = r.top + r.height / 2;
+      depth.style.setProperty("--dy", ((mid - centre) * 0.28).toFixed(1) + "px");
+    });
+  }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+
+  if (!reduce) {
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+  }
+  frame();
 </script>
 
 </body>

@@ -1,4 +1,4 @@
-"""Landing: hero, the problem, the solution, what is pressing now.
+"""Landing: hero, why, cases, how it works, what is pressing now, footer.
 
 The pressing-now feed spawns `find_issues` against the real graph rather than
 rendering fixture counts. Record/source-type totals are deliberately absent --
@@ -9,7 +9,7 @@ page itself advertises.
 
 cl import from "@jac/runtime" { Link }
 cl import from ..components.HeroMap { HeroMap }
-cl import from ..components.ProblemCharts { ProblemCharts }
+cl import from ..components.CaseStudies { CaseStudies }
 
 cl {
     def:pub page -> JsxElement {
@@ -24,7 +24,7 @@ cl {
         return
             <div className="landing">
 
-                <section className="hero" id="top">
+                <section className="hero" id="hero">
                     <HeroMap/>
                     <div className="hero-inner">
                         <h1>Make community objections count.</h1>
@@ -35,12 +35,12 @@ cl {
                         </p>
                         <div className="cta-row">
                             <Link className="btn btn-primary" to="/actions">Analyse a civic action</Link>
-                            <a className="btn btn-ghost" href="#solution">See how it works</a>
+                            <a className="btn btn-ghost" href="#how">See how it works</a>
                         </div>
                     </div>
                 </section>
 
-                <section className="problem" id="problem">
+                <section className="page-sec" id="why">
                     <h2>Caring is not the missing ingredient.</h2>
                     <p className="section-lead">Civic engagement fails in three ways, and they need opposite fixes.</p>
 
@@ -61,43 +61,62 @@ cl {
                             <p>Well-funded organising, pointed at the people already affected — who already agree — not at whoever decides.</p>
                         </article>
                     </div>
-
-                    <ProblemCharts/>
                 </section>
 
-                <section className="solution" id="solution">
+                <section className="page-sec" id="cases">
+                    <h2>Where it has already happened.</h2>
+                    <p className="section-lead">Two San Francisco cases, and the evidence for each.</p>
+                    <CaseStudies/>
+                </section>
+
+                <section className="page-sec" id="how">
                     <h2>Quorum puts the whole picture in one place.</h2>
                     <p className="section-lead">Scattered signal in. One countable action out.</p>
 
-                    <div className="steps">
-                        <article className="step">
-                            <div className="step-n">1</div>
-                            <h3>Aggregate</h3>
-                            <p>311, agendas, press and community records — deduplicated into one issue.</p>
-                        </article>
-                        <article className="step">
-                            <div className="step-n">2</div>
-                            <h3>Find who decides</h3>
-                            <p>The body that approves it, and who that body answers to.</p>
-                        </article>
-                        <article className="step">
-                            <div className="step-n">3</div>
-                            <h3>Retrieve what counts</h3>
-                            <p>Channel, format and deadline — each with a source and a date.</p>
-                        </article>
-                        <article className="step">
-                            <div className="step-n">4</div>
-                            <h3>Aim it</h3>
-                            <p>Impact zone vs decision zone. When they differ, re-aim.</p>
-                        </article>
-                    </div>
+                    <div className="how-grid">
+                        <aside className="inbox">
+                            <span className="mini-label">Signal in</span>
+                            <ul className="src-list">
+                                <li>311 service records</li>
+                                <li>Legistar agendas &amp; minutes</li>
+                                <li>Local and in-language press</li>
+                                <li>Community organisations</li>
+                            </ul>
+                            <p className="inbox-note">Scattered across four systems that never speak to each other.</p>
+                        </aside>
 
-                    <div className="rule-strip">
-                        <span><b>Retrieved, never generated.</b> No source, no claim — Quorum shows a gap instead of a guess.</span>
+                        <ol className="flow">
+                            <li>
+                                <span className="flow-n">1</span>
+                                <h3>Aggregate</h3>
+                                <p>Deduplicated into a single issue, so ten reports of one problem count as one problem.</p>
+                            </li>
+                            <li>
+                                <span className="flow-n">2</span>
+                                <h3>Find who decides</h3>
+                                <p>The body that approves it — and, crucially, the constituency that body answers to.</p>
+                            </li>
+                            <li>
+                                <span className="flow-n">3</span>
+                                <h3>Retrieve what counts</h3>
+                                <p>Channel, format and deadline, each carrying a source link and a retrieval date.</p>
+                            </li>
+                            <li>
+                                <span className="flow-n">4</span>
+                                <h3>Aim it</h3>
+                                <p>Compare impact zone against decision zone. When they differ, say so and re-aim.</p>
+                            </li>
+                        </ol>
+
+                        <aside className="outbox">
+                            <span className="mini-label">Action out</span>
+                            <p className="outbox-line"><b>One countable submission.</b></p>
+                            <p className="outbox-note">A named body, a named channel, a dated deadline — and the people already organising alongside you.</p>
+                        </aside>
                     </div>
                 </section>
 
-                <section className="pressing" id="pressing">
+                <section className="page-sec" id="now">
                     <h2>What is building across San Francisco.</h2>
                     <p className="section-lead">Live from the graph. Coral rows have a full procedural record.</p>
 
@@ -113,7 +132,7 @@ cl {
                                     <div className="feed-meta">{i["district"]}</div>
                                 </div>
                                 <span className={"status review" if i["tier"] == "full" else "status watch"}>
-                                    {"Full record" if i["tier"] == "full" else "Monitoring"}
+                                    {"Review needed" if i["tier"] == "full" else "Monitoring"}
                                 </span>
                             </Link>
                             for i in issues
@@ -121,10 +140,47 @@ cl {
                     </div>
 
                     <div className="feed-foot">
-                        <p className="feed-note">Record counts land when the concern pipeline does.</p>
+                        <p className="feed-note">Record counts land when the concern pipeline does. Quorum will not invent them.</p>
                         <Link className="btn btn-primary" to="/actions">Analyse a civic action</Link>
                     </div>
                 </section>
+
+                <footer className="foot">
+                    <div className="foot-wrap">
+                        <div className="foot-brand">
+                            <span className="brand-mark" aria-hidden="true"></span>
+                            <div>
+                                <strong>Quorum</strong>
+                                <p>Routing community objections to the body, channel and deadline that actually count.</p>
+                            </div>
+                        </div>
+
+                        <div className="foot-col">
+                            <span className="mini-label">Sources</span>
+                            <ul>
+                                <li>SF 311 / DataSF</li>
+                                <li>SF Legistar</li>
+                                <li>SF Department of Elections</li>
+                                <li>SF Recreation and Park</li>
+                                <li>OpenStreetMap contributors, CARTO</li>
+                            </ul>
+                        </div>
+
+                        <div className="foot-col">
+                            <span className="mini-label">Honest limits</span>
+                            <ul>
+                                <li>Procedural facts are retrieved and cited, never generated.</li>
+                                <li>Where no source exists, Quorum shows a gap.</li>
+                                <li>Neutral on outcome. Partisan only about process.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div className="foot-rule">
+                        <span>JacHacks SF 2026</span>
+                        <span>Neutral on outcome. Partisan only about process.</span>
+                    </div>
+                </footer>
 
             </div>;
     }

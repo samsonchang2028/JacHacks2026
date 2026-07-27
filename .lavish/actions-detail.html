@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quorum: Decision routing (redesign v2)</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :where(p, h1, h2, h3, h4, li, td, th, dd, dt) { overflow-wrap: anywhere; }
+
+  :root {
+    /* --- ink --- */
+    --ink:        #173f45;   /* deep teal-slate, headings */
+    --ink-soft:   #4a5c5c;
+    --ink-faint:  #8a7b6d;
+
+    /* --- warm ground --- */
+    --ivory:      #fffaf3;
+    --blush:      #fdf3ec;
+    --card:       #fffcf8;
+    --line:       #efe3d6;
+    --line-soft:  #f6ece2;
+
+    /* --- accents --- */
+    --coral:      #de5b49;
+    --coral-deep: #b8402c;
+    --coral-wash: rgba(222, 91, 73, 0.08);
+    --peach:      #f6b08e;
+    --mustard:    #d9a441;
+    --mustard-wash: rgba(217, 164, 65, 0.13);
+    --aqua:       #6fb9bd;
+    --aqua-wash:  #eaf5f3;
+    --sage:       #7f9d76;
+    --sage-wash:  rgba(127, 157, 118, 0.14);
+    --sage-deep:  #4f6b48;
+
+    --shadow: 0 10px 26px rgba(83, 55, 37, 0.09);
+    --shadow-lift: 0 16px 38px rgba(83, 55, 37, 0.12);
+    --lift-coral: 0 10px 22px rgba(222, 91, 73, 0.26);
+
+    /* headings serif, body sans */
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: "Segoe UI", ui-sans-serif, system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --t-h1:    clamp(30px, 4.2vw, 46px);
+    --t-h2:    clamp(24px, 2.6vw, 32px);
+    --t-h3:    21px;
+    --t-lead:  18px;
+    --t-body:  16px;
+    --t-small: 14px;
+    --t-fine:  12px;
+    --t-micro: 11px;
+
+    --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px;
+    --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px;
+
+    --r-sm: 8px; --r-md: 12px; --r-lg: 18px; --r-xl: 28px; --r-pill: 999px;
+  }
+
+  html { max-width: 100%; overflow-x: hidden; scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(circle at 4% 2%,   rgba(246, 176, 142, 0.28), transparent 32rem),
+      radial-gradient(circle at 96% 18%, rgba(139, 211, 215, 0.20), transparent 34rem),
+      radial-gradient(circle at 10% 78%, rgba(217, 164, 65, 0.13),  transparent 30rem),
+      var(--ivory);
+    background-attachment: fixed;
+    font-family: var(--sans);
+    font-size: var(--t-body);
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+
+  h1, h2, h3, .serif { font-family: var(--serif); font-weight: 400; letter-spacing: -0.01em; }
+  h1 { margin: 0; font-size: var(--t-h1); line-height: 1.08; }
+  h2 { margin: 0; font-size: var(--t-h2); line-height: 1.16; }
+  h3 { margin: 0; font-size: var(--t-h3); line-height: 1.28; }
+  p  { margin: 0; }
+
+  .wrap { width: min(1080px, 100%); margin: 0 auto; padding: 0 var(--s-5); }
+  main.wrap { padding-bottom: var(--s-8); }
+
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: var(--t-micro); font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .muted { color: var(--ink-faint); }
+
+  /* ================= nav ================= */
+  .nav {
+    position: sticky; top: 0; z-index: 900;
+    background: rgba(255, 250, 243, 0.9); backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-in {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--s-4); padding: var(--s-3) 0; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: var(--s-2); font-family: var(--serif); font-size: var(--t-lead); }
+  .brand-mark {
+    position: relative; width: 28px; height: 28px; border-radius: var(--r-sm); flex: none;
+    background: linear-gradient(135deg, var(--coral), var(--peach));
+  }
+  .brand-mark::before, .brand-mark::after { content: ""; position: absolute; border-radius: 50%; background: var(--ivory); }
+  .brand-mark::before { top: 6px; left: 6px; width: 11px; height: 11px; }
+  .brand-mark::after  { right: 6px; bottom: 7px; width: 7px; height: 7px; }
+  .nav-links { display: flex; gap: var(--s-1); flex-wrap: wrap; }
+  .nav-links a {
+    padding: var(--s-2) var(--s-3); border-radius: var(--r-pill);
+    color: var(--ink-soft); font-size: var(--t-small);
+  }
+  .nav-links a:hover { background: var(--aqua-wash); color: var(--ink); }
+  .nav-links a.active { background: var(--ink); color: var(--ivory); }
+
+  /* ================= issue switcher (map demoted) ================= */
+  .picker { padding: var(--s-6) 0 var(--s-5); }
+  .picker h1 { max-width: 18ch; }
+  .picker .sub { margin-top: var(--s-3); max-width: 60ch; color: var(--ink-soft); font-size: var(--t-lead); }
+
+  /* ---- the map, back at full size, with the side panel beside it ---- */
+  .actions-layout {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+    gap: var(--s-4); align-items: stretch; margin-top: var(--s-5);
+    height: clamp(420px, calc(100vh - 260px), 640px);
+  }
+  .map-frame {
+    position: relative; height: 100%; overflow: hidden;
+    border: 2px solid rgba(22, 63, 70, .14); border-radius: var(--r-xl);
+    background: linear-gradient(160deg, var(--aqua-wash), rgba(255, 252, 248, .9));
+    box-shadow: var(--shadow-lift);
+  }
+  #map { position: absolute; inset: 0; background: transparent; }
+  #map .leaflet-tile-pane { filter: sepia(.34) saturate(.78) hue-rotate(-8deg) brightness(1.04) contrast(.94); }
+  #map .leaflet-control-attribution {
+    font-family: var(--sans); font-size: 10px;
+    background: rgba(255, 250, 243, .84); color: var(--ink-faint);
+  }
+  .map-legend {
+    position: absolute; z-index: 500; left: var(--s-4); bottom: var(--s-4);
+    display: flex; flex-direction: column; gap: var(--s-2);
+    padding: var(--s-3) var(--s-4); border-radius: var(--r-md);
+    border: 1px solid var(--line); background: rgba(255, 252, 248, .94);
+    box-shadow: var(--shadow); font-size: var(--t-fine); color: var(--ink-soft);
+  }
+  .map-legend span { display: flex; align-items: center; gap: var(--s-2); }
+  .legend-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+  .legend-dot.full { background: var(--coral); box-shadow: 0 0 0 3px rgba(222, 91, 73, .22); }
+  .legend-dot.thin { background: var(--card); border: 2.5px solid var(--aqua); }
+
+  .issue-panel {
+    display: flex; flex-direction: column; height: 100%; min-height: 0;
+    border: 1px solid var(--line); border-radius: var(--r-xl); overflow: hidden;
+    background: var(--card); box-shadow: var(--shadow-lift);
+  }
+  .panel-head { flex: none; padding: var(--s-5) var(--s-5) var(--s-4); border-bottom: 1px solid var(--line); }
+  .panel-head h3 { margin-top: var(--s-2); }
+  .panel-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: var(--s-5); }
+  .panel-foot { flex: none; padding: var(--s-4) var(--s-5); border-top: 1px solid var(--line); }
+  .panel-verdict { font-size: var(--t-small); line-height: 1.6; }
+  .panel-sec { padding-top: var(--s-4); margin-top: var(--s-4); border-top: 1px solid var(--line-soft); }
+  .panel-sec > .eyebrow { display: block; margin-bottom: var(--s-2); }
+  .kv-row { display: flex; gap: var(--s-3); padding: var(--s-2) 0; align-items: baseline; }
+  .kv-row + .kv-row { border-top: 1px solid var(--line-soft); }
+  .kv-label { flex: none; width: 92px; color: var(--ink-faint); font-size: var(--t-micro); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .kv-value { font-size: var(--t-small); line-height: 1.5; }
+
+  .thin-note {
+    margin-top: var(--s-4); padding: var(--s-3) var(--s-4);
+    border: 1px dashed var(--line); border-radius: var(--r-md);
+    color: var(--ink-faint); font-size: var(--t-small);
+  }
+
+  /* ================= status pills ================= */
+  .pill {
+    display: inline-flex; align-items: center; gap: var(--s-2);
+    padding: var(--s-1) var(--s-3); border-radius: var(--r-pill);
+    font-size: var(--t-micro); font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .pill::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+  .pill.bad  { background: var(--coral-wash);   color: var(--coral-deep); }
+  .pill.warn { background: var(--mustard-wash); color: #8a6417; }
+  .pill.ok   { background: var(--sage-wash);    color: var(--sage-deep); }
+  .pill.info { background: var(--aqua-wash);    color: #2f6b64; }
+
+  /* ================= the verdict: hero ================= */
+  .verdict {
+    margin-top: var(--s-6);
+    border-radius: var(--r-xl); overflow: hidden;
+    border: 1px solid var(--line); background: var(--card);
+    box-shadow: var(--shadow-lift);
+  }
+  .verdict.mismatch { border-color: rgba(222, 91, 73, 0.4); }
+  .verdict-head { padding: var(--s-6) var(--s-6) var(--s-5); background: var(--coral-wash); }
+  .verdict.match .verdict-head { background: var(--mustard-wash); }
+  .verdict-head .eyebrow { color: var(--coral-deep); }
+  .verdict.match .verdict-head .eyebrow { color: #8a6417; }
+  .verdict-head h2 { margin-top: var(--s-3); max-width: 22ch; color: var(--coral-deep); }
+  .verdict.match .verdict-head h2 { color: #7a5410; }
+  .verdict-head .why { margin-top: var(--s-3); max-width: 64ch; color: var(--ink-soft); font-size: var(--t-small); }
+
+  /* impact vs decision */
+  .zones {
+    display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+    gap: var(--s-4); align-items: center;
+    padding: var(--s-5) var(--s-6);
+  }
+  .zone {
+    padding: var(--s-4); border-radius: var(--r-lg);
+    border: 1px solid var(--line); background: var(--blush);
+  }
+  .zone.decision { background: var(--aqua-wash); }
+  .zone .zv { margin-top: var(--s-2); font-family: var(--serif); font-size: var(--t-h3); line-height: 1.25; }
+  .zone .zm { margin-top: var(--s-2); font-size: var(--t-fine); color: var(--ink-faint); }
+  .zone .zsize { margin-top: var(--s-3); font-size: var(--t-fine); }
+
+  .zone-verdict {
+    display: grid; place-items: center; gap: var(--s-2);
+    padding: var(--s-2); min-width: 120px; text-align: center;
+  }
+  .zone-verdict .glyph {
+    display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+    font-size: 22px; line-height: 1;
+  }
+  .zone-verdict.no  .glyph { background: var(--coral-wash);   color: var(--coral-deep); }
+  .zone-verdict.yes .glyph { background: var(--sage-wash);    color: var(--sage-deep); }
+  .zone-verdict .lbl { font-size: var(--t-micro); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .zone-verdict.no  .lbl { color: var(--coral-deep); }
+  .zone-verdict.yes .lbl { color: var(--sage-deep); }
+
+  .correction {
+    display: flex; gap: var(--s-4); align-items: flex-start;
+    margin: 0 var(--s-6) var(--s-6); padding: var(--s-5);
+    border-radius: var(--r-lg); border: 1px solid var(--line);
+    background: linear-gradient(135deg, rgba(246,176,142,.16), rgba(255,252,248,.9));
+  }
+  .correction .ico { flex: none; font-size: 20px; line-height: 1.3; }
+  .correction h3 { font-size: var(--t-lead); }
+  .correction p { margin-top: var(--s-2); color: var(--ink-soft); font-size: var(--t-small); }
+
+  .q-pin { display: block; border-radius: 50%; }
+  .q-pin.full { width: 22px; height: 22px; background: var(--coral); border: 3px solid var(--ivory); box-shadow: 0 3px 10px rgba(83,55,37,.35), 0 0 0 4px rgba(222,91,73,.20); }
+  .q-pin.thin { width: 15px; height: 15px; background: var(--ivory); border: 3px solid var(--aqua); box-shadow: 0 2px 7px rgba(83,55,37,.25); }
+  .q-pin.selected { transform: scale(1.28); }
+
+  /* ================= the route ================= */
+  section.band { padding: var(--s-7) 0 0; }
+  .band > .eyebrow + h2 { margin-top: var(--s-2); }
+  .band > h2 + p { margin-top: var(--s-3); max-width: 64ch; color: var(--ink-soft); }
+
+  .route-path { display: grid; gap: var(--s-2); margin-top: var(--s-5); }
+  .hop {
+    display: grid; grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: var(--s-4); align-items: center;
+    padding: var(--s-4); border-radius: var(--r-lg);
+    border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow);
+  }
+  .hop-n {
+    width: 36px; height: 36px; border-radius: var(--r-md);
+    display: grid; place-items: center;
+    background: var(--aqua-wash); color: #2f6b64;
+    font-size: var(--t-small); font-weight: 700;
+  }
+  .hop.is-deadline .hop-n { background: var(--mustard-wash); color: #8a6417; }
+  .hop-role { font-size: var(--t-micro); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); }
+  .hop-name { margin-top: var(--s-1); font-family: var(--serif); font-size: var(--t-h3); line-height: 1.25; }
+  .hop-note { margin-top: var(--s-1); font-size: var(--t-small); color: var(--ink-soft); }
+  .hop-edge {
+    justify-self: end; padding: var(--s-1) var(--s-3); border-radius: var(--r-pill);
+    background: var(--blush); color: var(--ink-faint);
+    font-family: var(--mono); font-size: var(--t-micro);
+  }
+  .hop-link {
+    justify-self: start; margin-left: 17px; width: 2px; height: var(--s-4);
+    background: var(--line); border-radius: 2px;
+  }
+
+  /* ================= counts / doesn't count ================= */
+  .counts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--s-4); margin-top: var(--s-5); }
+  .card {
+    padding: var(--s-5); border-radius: var(--r-lg);
+    border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow);
+  }
+  .card > h3 { margin-bottom: var(--s-3); font-size: var(--t-lead); }
+  .tick { list-style: none; margin: 0; padding: 0; }
+  .tick li { display: flex; gap: var(--s-3); padding: var(--s-3) 0; font-size: var(--t-small); color: var(--ink-soft); }
+  .tick li + li { border-top: 1px solid var(--line-soft); }
+  .tick li::before { flex: none; font-weight: 700; }
+  .tick.yes li::before { content: "✓"; color: var(--sage-deep); }
+  .tick.no  li::before { content: "✕"; color: var(--coral-deep); }
+
+  /* ================= actions ================= */
+  .steps { display: grid; gap: var(--s-3); margin-top: var(--s-5); }
+  /* Third column holds the button in the card's own right-hand space. */
+  .step {
+    display: grid; grid-template-columns: 30px minmax(0,1fr) auto;
+    gap: var(--s-4); align-items: center;
+    padding: var(--s-5); border-radius: var(--r-lg);
+    border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow);
+  }
+  .step-n { align-self: start; }
+  .step:first-child { border-color: rgba(222,91,73,.35); background: linear-gradient(135deg, var(--coral-wash), var(--card)); }
+  .step-n {
+    width: 30px; height: 30px; border-radius: var(--r-sm);
+    display: grid; place-items: center;
+    background: var(--blush); color: var(--ink-soft); font-size: var(--t-small); font-weight: 700;
+  }
+  .step:first-child .step-n { background: var(--coral); color: var(--ivory); }
+  .step-what { font-family: var(--serif); font-size: var(--t-h3); line-height: 1.28; }
+  .step-how { margin-top: var(--s-2); font-size: var(--t-small); color: var(--ink-soft); }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: var(--s-2);
+    min-height: 52px; padding: 0 var(--s-6); border-radius: var(--r-pill);
+    font-size: var(--t-body); font-weight: 600;
+  }
+  .btn-primary { background: linear-gradient(135deg, var(--coral), var(--peach)); color: var(--ivory); box-shadow: var(--lift-coral); }
+  .btn-ghost { border: 1px solid var(--line); color: var(--ink-soft); background: var(--card); }
+  /* One button at a time: it belongs to the step you are on. Kept in flow (opacity,
+     not display) so the column keeps its width and nothing shifts on hover. */
+  .step-go {
+    min-height: 44px; padding: 0 var(--s-5); font-size: var(--t-small); white-space: nowrap;
+    opacity: 0; transition: opacity .12s ease;
+  }
+  .step:hover .step-go, .step:focus-within .step-go { opacity: 1; }
+  /* Touch devices have no hover, so the buttons stay visible there. */
+  @media (hover: none) { .step-go { opacity: 1; } }
+
+  /* ================= context (secondary, collapsed) ================= */
+  section.band.tight { padding-top: var(--s-6); }
+  section.band.tight > .eyebrow { margin-bottom: var(--s-3); }
+  /* No overflow:hidden here, it clipped the taller open rows. Corners are
+     rounded on the summary itself, which is the only thing that paints to the edge. */
+  details.ctx { margin-top: -1px; border: 1px solid var(--line); background: var(--card); }
+  details.ctx:first-of-type { margin-top: 0; border-radius: var(--r-lg) var(--r-lg) 0 0; }
+  details.ctx:first-of-type > summary { border-radius: var(--r-lg) var(--r-lg) 0 0; }
+  details.ctx:last-of-type { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  details.ctx:last-of-type:not([open]) > summary { border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  details.ctx > summary {
+    display: flex; align-items: center; gap: var(--s-3);
+    padding: var(--s-3) var(--s-4); cursor: pointer; list-style: none;
+    font-size: var(--t-small); color: var(--ink-soft);
+  }
+  details.ctx > summary:hover { background: var(--blush); }
+  details.ctx > summary::-webkit-details-marker { display: none; }
+  details.ctx > summary::after { content: "＋"; margin-left: auto; color: var(--ink-faint); font-family: var(--sans); font-size: var(--t-body); }
+  details.ctx[open] > summary::after { content: "−"; }
+  details.ctx[open] > summary { border-bottom: 1px solid var(--line); }
+  .ctx-body { padding: var(--s-5); }
+  .ctx-body p { color: var(--ink-soft); }
+  .cite { padding: 0 1px; font-size: 11px; font-weight: 700; color: var(--coral-deep); vertical-align: super; line-height: 0; cursor: help; }
+
+  .org { display: flex; gap: var(--s-3); padding: var(--s-4) 0; }
+  .org:first-child { padding-top: 0; }
+  .org + .org { border-top: 1px solid var(--line-soft); }
+  .org-avatar {
+    flex: none; width: 40px; height: 40px; border-radius: var(--r-md);
+    background: linear-gradient(135deg, var(--aqua), var(--aqua-wash));
+    display: grid; place-items: center; font-size: var(--t-fine); font-weight: 700; color: var(--ink);
+  }
+  .org-name { font-family: var(--serif); font-size: var(--t-lead); }
+  .lang-tag { display: inline-block; margin-left: var(--s-2); padding: 0 var(--s-2); border-radius: var(--r-pill); background: var(--blush); color: var(--ink-faint); font-family: var(--sans); font-size: var(--t-micro); font-weight: 700; }
+  .org-role { margin-top: var(--s-1); color: var(--ink-soft); font-size: var(--t-small); }
+
+  .prec { padding: var(--s-4) 0; }
+  .prec:first-child { padding-top: 0; }
+  .prec + .prec { border-top: 1px solid var(--line-soft); }
+  .prec-title { font-family: var(--serif); font-size: var(--t-lead); }
+  .prec-meta { margin-top: var(--s-2); color: var(--ink-soft); font-size: var(--t-small); }
+
+  /* ================= sources & verification ================= */
+  .src-scroll { overflow-x: auto; margin-top: var(--s-5); border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--card); }
+  table.src { width: 100%; min-width: 620px; border-collapse: collapse; }
+  table.src th, table.src td { padding: var(--s-3) var(--s-4); text-align: left; vertical-align: top; }
+  table.src th {
+    background: var(--blush); color: var(--ink-faint);
+    font-size: var(--t-micro); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+  }
+  table.src td { font-size: var(--t-small); color: var(--ink-soft); border-bottom: 1px solid var(--line-soft); }
+  table.src tr:last-child td { border-bottom: 0; }
+  table.src td.fact { color: var(--ink); }
+  .no-guess {
+    margin-top: var(--s-3); padding: var(--s-3) var(--s-4);
+    border-radius: var(--r-md); background: var(--mustard-wash);
+    color: #7a5410; font-size: var(--t-fine);
+  }
+  .no-guess b { font-weight: 700; }
+
+  /* ================= mobile action sheet ================= */
+  .sheet { display: none; }
+
+  /* ================= responsive ================= */
+  @media (max-width: 860px) {
+    .zones { grid-template-columns: 1fr; gap: var(--s-3); padding: var(--s-5) var(--s-4); }
+    .zone-verdict { flex-direction: row; padding: 0; }
+    .correction { margin-left: var(--s-4); margin-right: var(--s-4); padding: var(--s-4); }
+    .verdict-head { margin: 0; padding: var(--s-5) var(--s-4); }
+    .actions-layout { grid-template-columns: 1fr; height: auto; }
+    .map-frame { height: 380px; }
+    .issue-panel { height: auto; max-height: 560px; }
+  }
+  @media (max-width: 620px) {
+    .wrap { padding: 0 var(--s-4); }
+    .nav-in { padding: var(--s-2) 0; }
+    .nav-links { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: var(--s-1); }
+    .nav-links a { white-space: nowrap; }
+
+    /* Mobile shows the seven things in order, nothing else. */
+    .picker .sub, .hop-edge { display: none; }
+    .map-frame { height: 300px; }
+    .hop { grid-template-columns: 30px minmax(0,1fr); gap: var(--s-3); padding: var(--s-3); }
+    .hop-n { width: 30px; height: 30px; }
+    .hop-name { font-size: var(--t-lead); }
+    .step { grid-template-columns: 26px minmax(0,1fr); padding: var(--s-4); }
+    .step-n { width: 26px; height: 26px; }
+    /* No right-hand space to sit in at this width, so it goes back under the text. */
+    .step-go { grid-column: 2; width: 100%; }
+    .step-what { font-size: var(--t-lead); }
+    /* Everything after the first action collapses out of the primary flow. */
+    .steps .step:not(:first-child) { box-shadow: none; }
+
+    /* sticky action bar */
+    .sheet {
+      display: flex; gap: var(--s-3); align-items: center;
+      position: sticky; bottom: 0; z-index: 800;
+      margin: var(--s-6) calc(var(--s-4) * -1) 0;
+      padding: var(--s-3) var(--s-4);
+      background: rgba(255, 250, 243, 0.96); backdrop-filter: blur(10px);
+      border-top: 1px solid var(--line);
+    }
+    .sheet .btn { flex: 1; min-height: 48px; padding: 0 var(--s-4); font-size: var(--t-small); }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#"><span class="brand-mark" aria-hidden="true"></span>Quorum</a>
+    <div class="nav-links">
+      <a href="#">Home</a>
+      <a class="active" href="#">Route an issue</a>
+      <a href="#">How it works</a>
+    </div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- ============ 1. what this is + which issue ============ -->
+  <section class="picker">
+    <p class="eyebrow">Decision routing</p>
+    <h1 style="margin-top:12px">An objection only counts if it reaches the body that decides.</h1>
+    <p class="sub">Through the channel that counts, before the deadline. Quorum traces that route for an open issue and tells you where yours currently goes wrong.</p>
+
+    <div class="actions-layout">
+      <div class="map-frame">
+        <div id="map"></div>
+        <div class="map-legend">
+          <span><i class="legend-dot full"></i> Routed: full procedural record</span>
+          <span><i class="legend-dot thin"></i> Tracked from 311 / Legistar</span>
+        </div>
+      </div>
+
+      <aside class="issue-panel">
+        <div class="panel-head">
+          <p class="eyebrow" id="p-district"></p>
+          <h3 id="p-title"></h3>
+        </div>
+        <div class="panel-body" id="p-body"></div>
+        <div class="panel-foot">
+          <a class="btn btn-primary" href="#verdict" style="width:100%">See the full route ↓</a>
+        </div>
+      </aside>
+    </div>
+
+    <p class="thin-note">7 more issues tracked from 311 and Legistar, with <b>no verified procedural record yet</b>. Quorum will not route an issue it cannot source.</p>
+  </section>
+
+  <!-- ============ 2. the verdict (hero) ============ -->
+  <div id="verdict"></div>
+
+  <!-- ============ 3. the route ============ -->
+  <section class="band">
+    <p class="eyebrow">The route</p>
+    <h2>Where your input has to arrive</h2>
+    <p>One hop at a time, as retrieved from the record, not a network diagram. Each step names the next thing that must be true for your objection to be counted.</p>
+    <div class="route-path" id="route-path"></div>
+  </section>
+
+  <!-- ============ 4. what counts ============ -->
+  <section class="band">
+    <p class="eyebrow">Validity</p>
+    <h2>What counts as input here</h2>
+    <p>The channel has rules. Effort that does not meet them is not counted, however much of it there is.</p>
+    <div class="counts-grid" id="counts"></div>
+  </section>
+
+  <!-- ============ 5. do this next ============ -->
+  <section class="band">
+    <p class="eyebrow">Do this next</p>
+    <h2 id="next-h2">The correction</h2>
+    <div class="steps" id="steps"></div>
+  </section>
+
+  <!-- ============ 6. background + sources: collapsed by default ============ -->
+  <section class="band tight">
+    <p class="eyebrow">Background</p>
+    <div id="context"></div>
+
+    <details class="ctx">
+      <summary>Sources and verification <span id="src-count"></span></summary>
+      <div class="ctx-body">
+        <div class="src-scroll">
+          <table class="src">
+            <thead><tr><th>Fact</th><th>Source</th><th>Retrieved</th><th>Status</th></tr></thead>
+            <tbody id="src-body"></tbody>
+          </table>
+        </div>
+        <p class="no-guess" id="no-guess"></p>
+      </div>
+    </details>
+  </section>
+
+  <div class="sheet">
+    <a class="btn btn-primary" href="#steps" style="flex:2">Start here</a>
+    <button class="btn btn-ghost">Sources</button>
+  </div>
+
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* Content is the seed in main.jac. Nothing here is invented; the one uncited
+   fact in each issue renders as an explicit gap. */
+const ISSUES = {
+  propk: {
+    key: "propk",
+    ll: [37.7597, -122.5107],
+    district: "Sunset / Richmond · Citywide measure",
+    title: "Proposition K: Great Highway",
+    cardVerdict: "Aimed at the wrong electorate",
+    cardPill: '<span class="pill bad">Zone mismatch</span>',
+    short: "The westside lost its own districts by 60–70 points and still lost the vote. The deciding audience was the rest of the city.",
+
+    verdict: {
+      state: "mismatch",
+      eyebrow: "⚠ Divergence: electorate",
+      headline: "Your outreach is aimed at people who already agree.",
+      why: "Prop K passed citywide with 54.73%. It lost roughly 60–40 in the Sunset and 70–30 in the Richmond. The opposition was well funded and well organized, and it spent almost all of it inside the districts that already voted no. The impact zone and the decision zone are different graphs.",
+      impact:   { l: "Impact lands on", v: "Sunset / Richmond", m: "GeoZone · reached via impacts", size: "Districts 1, 4 and 7" },
+      decision: { l: "Decided by", v: "Citywide electorate", m: "answers to all 11 districts · via accountable_to", size: "All 11 districts vote" },
+      match: false,
+      matchLabel: "Do not match",
+      correction: {
+        h: "Target undecided voters outside the impact zone.",
+        p: "Every dollar spent west of Sunset Blvd is spent on people who already vote no. The persuadable surface is the eastside districts that heard 'a new park' and nothing about traffic or utilisation."
+      }
+    },
+
+    route: [
+      { role: "The issue", name: "Proposition K: Great Highway", note: "Open ballot measure, Sunset / Richmond impact.", edge: "root" },
+      { role: "Is decided by", name: "Citywide electorate (ballot measure)", note: "Not the Board, not a commission. A measure is decided at the ballot.", edge: "decided_by" },
+      { role: "Which answers to", name: "All 11 districts", note: "Not the impact zone. This is the edge that makes the divergence detectable.", edge: "accountable_to" },
+      { role: "Accepts input via", name: "Signature gathering, then citywide persuasion", note: "District public comment does not reach this body. Signatures and votes do.", edge: "accepts_input_via" },
+      { role: "By", name: "Signature threshold and filing date", note: "No verified source found. Quorum will not guess.", edge: "has_deadline", deadline: true, unverified: true }
+    ],
+
+    counts: [
+      "Valid signatures from registered SF voters, citywide",
+      "Persuasion of voters in districts that have not already decided",
+      "Disclosed, compliant spending under FPPC and SF Ethics rules"
+    ],
+    notCounts: [
+      "District-concentrated outreach in Sunset and Richmond, already decided",
+      "Public comment to the Board of Supervisors, the wrong body for a measure",
+      "Litigation after certification; the 2024 CEQA challenge lost and was appealed"
+    ],
+
+    actions: [
+      { w: "Retarget persuasion to the eastside districts, not the westside", h: "The westside is already convinced. Every dollar spent there is a dollar not spent on the deciding constituency." },
+      { w: "Lead with local traffic impact, not park opposition", h: "Eastside voters heard 'a new park' and little about utilisation or traffic. That information gap is the persuadable surface." },
+      { w: "Check FPPC and SF Ethics disclosure before any spend", h: "Ballot-measure spending triggers disclosure obligations; issue ads need platform authorisation and disclaimers." }
+    ],
+
+    problem: "Prop K passed citywide with 54.73% in November 2024, closing the Great Highway to cars.<sup class='cite' title='SF Department of Elections, November 2024 certified results'>[1]</sup> It lost roughly 60–40 in the Sunset and 70–30 in the Richmond; across Districts 1, 4, 7 and 11 the split was about 61% no to 39% yes.<sup class='cite' title='District-level returns, November 2024 general election'>[2]</sup> One opponent spent $269,000 against the measure.<sup class='cite' title='Campaign finance filings, opposition committee spending'>[3]</sup> They filed a CEQA challenge, lost, and appealed to the First Appellate District.<sup class='cite' title='First Appellate District, CEQA challenge and appeal record'>[4]</sup>",
+    organizers: [
+      { i:"OP", n:"Open the Great Highway", lang:"EN", r:"Westside opposition campaign. One opponent spent $269,000 against the measure." },
+      { i:"AP", n:"CEQA appellants", lang:"EN", r:"Filed a challenge, lost, appealed to the First Appellate District. The court held that a minority of supervisors placing a measure on the ballot are not a public agency." },
+      { i:"RC", n:"Recall organizers", lang:"EN", r:"Campaign prompted the successful recall of Supervisor Engardio. Now gathering signatures for a follow-up measure." }
+    ],
+    precedents: [
+      { t:"Prop K first campaign (2024)", m:"<b>Channel:</b> CEQA challenge + district campaign. District-concentrated outreach plus litigation.", o:"loss" },
+      { t:"Chinatown Central Subway community review", m:"<b>Channel:</b> Commission written comment, in-language, submitted at hearings.", o:"win" }
+    ],
+
+    sources: [
+      { f:"Decided by the citywide electorate", s:"SF Department of Elections, Nov 2024 certified results", d:"2026-07-26", v:true },
+      { f:"Answers to all 11 districts, not the impact zone", s:"sfelections.sfgov.org", d:"2026-07-26", v:true },
+      { f:"Channel: signature gathering, then citywide persuasion", s:"sfelections.sfgov.org", d:"2026-07-26", v:true },
+      { f:"Signature threshold and filing date", s:null, d:null, v:false }
+    ]
+  },
+
+  portsmouth: {
+    key: "portsmouth",
+    ll: [37.7947, -122.4058],
+    district: "Chinatown · District 3",
+    title: "Portsmouth Square renovation",
+    cardVerdict: "Position held, record empty",
+    cardPill: '<span class="pill warn">Record failure</span>',
+    short: "A historic pedestrian bridge is being demolished. The opposition is organized, but the supervisor's office has no record of it.",
+
+    verdict: {
+      state: "match",
+      eyebrow: "⚠ Divergence: channel",
+      headline: "The community had a position. The official record had nothing.",
+      why: "The zones match here: the Rec & Park Commission answers to the same District 3 the demolition lands on. So the failure is not geography, it is routing. An organized, in-language opposition has been talking to each other and to the press, while Supervisor Sauter says his office received no communication in support of keeping the bridge.",
+      impact:   { l: "Impact lands on", v: "Chinatown / District 3", m: "GeoZone · reached via impacts", size: "Park closed ~2 years" },
+      decision: { l: "Decided by", v: "SF Rec & Park Commission", m: "answers to Chinatown / D3 · via accountable_to", size: "Mayor-appointed body" },
+      match: true,
+      matchLabel: "Zones match",
+      correction: {
+        h: "Put the position into the record, through the channel that counts.",
+        p: "Nothing needs to be persuaded here; it needs to be filed. Written comment to the Commission Secretary and CCBA speakers on the record are what the body actually counts. Volume in the wrong place is invisible to it."
+      }
+    },
+
+    route: [
+      { role: "The issue", name: "Portsmouth Square renovation", note: "$73M project; contested piece is the Kearny Street pedestrian bridge.", edge: "root" },
+      { role: "Is decided by", name: "SF Recreation and Park Commission", note: "Mayor-appointed. The D3 supervisor's office fields constituent input.", edge: "decided_by" },
+      { role: "Which answers to", name: "Chinatown / District 3", note: "The same zone the impact lands on, so the route is short, and it is not being used.", edge: "accountable_to" },
+      { role: "Accepts input via", name: "Commission general public comment", note: "Written to the Commission Secretary, or in person at a regular meeting.", edge: "accepts_input_via" },
+      { role: "By", name: "Next comment deadline", note: "No verified source found. Quorum will not guess.", edge: "has_deadline", deadline: true, unverified: true }
+    ],
+
+    counts: [
+      "Written comment to the Commission Secretary, one distinct submitter, in their own words",
+      "In-language comment; 中文 submissions are accepted on the record",
+      "An association of record (CCBA) speaking at general public comment",
+      "A position formally logged by the D3 supervisor's office"
+    ],
+    notCounts: [
+      "Bulk-generated identical emails; staff recognise and discount them",
+      "Press coverage and social posts; they do not enter the Commission record",
+      "Protest outside the site alone, with nothing filed"
+    ],
+
+    actions: [
+      { w: "Submit written comment to the Rec & Park Commission Secretary", h: "The countable unit is a distinct submitter, not a distinct email. Ask people to write in their own words; staff recognise and discount bulk-generated comment." },
+      { w: "Register CCBA speakers for general public comment", h: "An association of record speaking on the record outweighs volume. Bring the in-language speakers." },
+      { w: "Ask the D3 supervisor's office to log the position formally", h: "The supervisor said he received no communication. Closing that gap is the whole objective." }
+    ],
+
+    problem: "A $73M renovation broke ground in June 2026, closing the park for roughly two years.<sup class='cite' title='SF Rec &amp; Park, Portsmouth Square Improvement Project record'>[1]</sup> The renovation is broadly supported; the contested piece is the removal of the historic pedestrian bridge over Kearny Street, demolished to make room for a larger two-story clubhouse.<sup class='cite' title='Local news coverage, Kearny Street pedestrian bridge demolition'>[2]</sup> Opposition exists and is organized, but District 3 Supervisor Danny Sauter said he was unaware of it, and that his office had received no communication in support of keeping the bridge.<sup class='cite' title='Supervisor Danny Sauter (D3), quoted statement'>[3]</sup> City survey data reportedly showed 77% of residents supported the demolition; the argument here is about process, not unanimity.<sup class='cite' title='City survey data, as cited in coverage'>[4]</sup>",
+    organizers: [
+      { i:"CC", n:"CCBA", lang:"中文 / EN", r:"176-year-old association representing Chinatown's family associations. Says it was never invited to project-related community meetings." },
+      { i:"TN", n:"Thomas Ng", lang:"中文", r:"CCBA board member of five decades. Opposes the bridge removal; says he never heard the plan from city officials." },
+      { i:"MU", n:"Merchants United Association", lang:"中文 / EN", r:"Ed Siu represents 150+ merchants. Protested the removal and the three simultaneous Chinatown construction projects." }
+    ],
+    precedents: [
+      { t:"Chinatown Central Subway community review", m:"<b>Channel:</b> Commission written comment, in-language, submitted at hearings.", o:"win" },
+      { t:"Prop K first campaign (2024)", m:"<b>Channel:</b> CEQA challenge + district campaign. District-concentrated outreach plus litigation.", o:"loss" }
+    ],
+
+    sources: [
+      { f:"Decided by the SF Recreation and Park Commission", s:"sfrecpark.org, Portsmouth Square Improvement Project", d:"2026-07-26", v:true },
+      { f:"Mayor-appointed; D3 supervisor's office fields input", s:"sfrecpark.org", d:"2026-07-26", v:true },
+      { f:"Channel: Commission general public comment", s:"sfrecpark.org", d:"2026-07-26", v:true },
+      { f:"Next comment deadline", s:null, d:null, v:false }
+    ]
+  }
+};
+
+const THIN = [
+  { ll:[37.7699,-122.4269], t:"Panhandle bike lane redesign" },
+  { ll:[37.7841,-122.4078], t:"Tenderloin SRO habitability cases" },
+  { ll:[37.7509,-122.4184], t:"Mission St bus lane extension" },
+  { ll:[37.7350,-122.4340], t:"Balboa Park station access" },
+  { ll:[37.8020,-122.4190], t:"North Beach parking removal" },
+  { ll:[37.7280,-122.4750], t:"Lake Merced shoreline erosion" },
+  { ll:[37.7440,-122.3900], t:"Bayview industrial rezoning" }
+];
+
+const $ = id => document.getElementById(id);
+let active = null;
+
+/* ---- the map: built once, pins switch the route below ---- */
+const map = L.map("map", {
+  center: [37.7749, -122.4394], zoom: 12.3,
+  zoomControl: false, scrollWheelZoom: false
+});
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+  attribution: "&copy; OpenStreetMap contributors &copy; CARTO", maxZoom: 19
+}).addTo(map);
+
+const icon = (tier, sel) => {
+  const size = tier === "full" ? 22 : 15;
+  return L.divIcon({
+    className: "", html: `<i class="q-pin ${tier}${sel ? " selected" : ""}"></i>`,
+    iconSize: [size, size], iconAnchor: [size / 2, size / 2]
+  });
+};
+
+const markers = {};
+for (const key in ISSUES) {
+  const m = L.marker(ISSUES[key].ll, { icon: icon("full", false) }).addTo(map);
+  m._tier = "full";
+  m.bindTooltip(`${ISSUES[key].title}: ${ISSUES[key].cardVerdict}`, { direction: "top" });
+  m.on("click", () => show(key));
+  markers[key] = m;
+}
+THIN.forEach((t, i) => {
+  const m = L.marker(t.ll, { icon: icon("thin", false) }).addTo(map);
+  m._tier = "thin";
+  m.bindTooltip(`${t.t}: no verified record`, { direction: "top" });
+  markers["thin" + i] = m;
+});
+
+/* ---- panel: the verdict in one glance; the depth is the page below ---- */
+function renderPanel(d) {
+  $("p-district").textContent = d.district;
+  $("p-title").textContent = d.title;
+  const due = d.sources[d.sources.length - 1];
+  $("p-body").innerHTML = `
+    ${d.cardPill}
+    <p class="panel-verdict" style="margin-top:12px"><b>${d.verdict.headline}</b></p>
+    <p class="panel-verdict muted" style="margin-top:8px">${d.short}</p>
+
+    <div class="panel-sec">
+      <div class="kv-row">
+        <span class="kv-label">Decides</span>
+        <span class="kv-value">${d.verdict.decision.v}</span>
+      </div>
+      <div class="kv-row">
+        <span class="kv-label">Channel</span>
+        <span class="kv-value">${d.route[3].name}</span>
+      </div>
+      <div class="kv-row">
+        <span class="kv-label">Deadline</span>
+        <span class="kv-value">${due.v ? due.d : '<span class="pill warn">Not verified</span>'}</span>
+      </div>
+    </div>
+
+    <div class="panel-sec">
+      <span class="eyebrow">Do this first</span>
+      <p class="panel-verdict">${d.actions[0].w}</p>
+    </div>`;
+}
+
+/* ---- verdict ---- */
+function renderVerdict(d) {
+  const g = d.verdict;
+  $("verdict").innerHTML = `
+    <section class="verdict ${g.state}" role="alert">
+      <div class="verdict-head">
+        <p class="eyebrow">${g.eyebrow}</p>
+        <h2>${g.headline}</h2>
+        <p class="why">${g.why}</p>
+      </div>
+
+      <div class="zones">
+        <div class="zone impact">
+          <p class="eyebrow">${g.impact.l}</p>
+          <div class="zv">${g.impact.v}</div>
+          <div class="zm">${g.impact.m}</div>
+          <div class="zsize"><span class="pill info">${g.impact.size}</span></div>
+        </div>
+        <div class="zone-verdict ${g.match ? "yes" : "no"}">
+          <span class="glyph">${g.match ? "＝" : "≠"}</span>
+          <span class="lbl">${g.matchLabel}</span>
+        </div>
+        <div class="zone decision">
+          <p class="eyebrow">${g.decision.l}</p>
+          <div class="zv">${g.decision.v}</div>
+          <div class="zm">${g.decision.m}</div>
+          <div class="zsize"><span class="pill info">${g.decision.size}</span></div>
+        </div>
+      </div>
+
+      <div class="correction">
+        <span class="ico" aria-hidden="true">→</span>
+        <div>
+          <h3>Recommended correction</h3>
+          <p>${g.correction.p}</p>
+          <p style="margin-top:8px"><b style="color:var(--ink)">${g.correction.h}</b></p>
+        </div>
+      </div>
+    </section>`;
+}
+
+/* ---- route ---- */
+function renderRoute(d) {
+  $("route-path").innerHTML = d.route.map((h, i) => `
+    ${i ? '<div class="hop-link"></div>' : ""}
+    <div class="hop ${h.deadline ? "is-deadline" : ""}">
+      <div class="hop-n">${i + 1}</div>
+      <div>
+        <div class="hop-role">${h.role}</div>
+        <div class="hop-name">${h.name}</div>
+        <div class="hop-note">${h.unverified
+          ? `<span class="pill warn">Not verified</span> ${h.note}`
+          : h.note}</div>
+      </div>
+      <span class="hop-edge">${h.edge}</span>
+    </div>`).join("");
+}
+
+/* ---- validity ---- */
+function renderCounts(d) {
+  $("counts").innerHTML = `
+    <div class="card">
+      <h3>Counts as input</h3>
+      <ul class="tick yes">${d.counts.map(c => `<li>${c}</li>`).join("")}</ul>
+    </div>
+    <div class="card">
+      <h3>Does not count</h3>
+      <ul class="tick no">${d.notCounts.map(c => `<li>${c}</li>`).join("")}</ul>
+    </div>`;
+}
+
+/* ---- actions ---- */
+function renderSteps(d) {
+  $("next-h2").textContent = d.verdict.correction.h;
+  /* The button lives in the step it starts, so there is no separate CTA that has
+     to restate which step it means. */
+  $("steps").innerHTML = d.actions.map((a, i) => `
+    <div class="step">
+      <div class="step-n">${i + 1}</div>
+      <div>
+        <div class="step-what">${a.w}</div>
+        <div class="step-how">${a.h}</div>
+      </div>
+      <button class="btn ${i ? "btn-ghost" : "btn-primary"} step-go">
+        ${i ? "Open this step" : "Start here"}
+      </button>
+    </div>`).join("");
+}
+
+/* ---- context ---- */
+function renderContext(d) {
+  $("context").innerHTML = `
+    <details class="ctx">
+      <summary>The problem</summary>
+      <div class="ctx-body"><p>${d.problem}</p></div>
+    </details>
+    <details class="ctx">
+      <summary>Organizers already working on this</summary>
+      <div class="ctx-body">${d.organizers.map(o => `
+        <div class="org">
+          <div class="org-avatar">${o.i}</div>
+          <div>
+            <div class="org-name">${o.n}<span class="lang-tag">${o.lang}</span></div>
+            <div class="org-role">${o.r}</div>
+          </div>
+        </div>`).join("")}</div>
+    </details>
+    <details class="ctx">
+      <summary>Precedent: what moved and what did not</summary>
+      <div class="ctx-body">${d.precedents.map(p => `
+        <div class="prec">
+          <div class="prec-title">${p.t}</div>
+          <div class="prec-meta">${p.m}</div>
+          <div style="margin-top:10px">
+            <span class="pill ${p.o === "win" ? "ok" : "bad"}">${p.o === "win" ? "Moved the outcome" : "Did not move it"}</span>
+          </div>
+        </div>`).join("")}</div>
+    </details>`;
+}
+
+/* ---- sources ---- */
+function renderSources(d) {
+  $("src-body").innerHTML = d.sources.map(s => `
+    <tr>
+      <td class="fact">${s.f}</td>
+      <td>${s.s || "Not found"}</td>
+      <td>${s.d || "Not found"}</td>
+      <td>${s.v ? '<span class="pill ok">Verified</span>' : '<span class="pill warn">Not verified</span>'}</td>
+    </tr>`).join("");
+  const ok = d.sources.filter(s => s.v).length, n = d.sources.length;
+  $("src-count").innerHTML = ok === n
+    ? `<span class="pill ok">${n} of ${n} verified</span>`
+    : `<span class="pill warn">${ok} of ${n} verified</span>`;
+  $("no-guess").innerHTML = ok === n
+    ? `<b>Every fact on this route is sourced and dated.</b>`
+    : `<b>No verified source found for ${n - ok} fact${n - ok > 1 ? "s" : ""}. Quorum will not guess.</b>`;
+}
+
+/* ---- switch ---- */
+function show(key) {
+  active = ISSUES[key];
+  for (const k in markers) markers[k].setIcon(icon(markers[k]._tier, k === key));
+  renderPanel(active);
+  renderVerdict(active);
+  renderRoute(active);
+  renderCounts(active);
+  renderSteps(active);
+  renderContext(active);
+  renderSources(active);
+}
+
+show("propk");
+</script>
+</body>
+</html>

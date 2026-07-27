@@ -22,7 +22,18 @@ node Issue {
         # for the workup page, where there is room for it.
         short: str = "",
         problem: str = "",
-        srcs: list = [];
+        srcs: list = [],
+        # "electorate" | "channel" | "" -- the failure mode the verdict renders.
+        # Zone mismatch alone is not enough: Portsmouth zones match, and the
+        # failure is still real (empty channel record).
+        failure_kind: str = "",
+        verdict_headline: str = "",
+        verdict_why: str = "",
+        correction_h: str = "",
+        correction_p: str = "",
+        # What the channel counts / does not count. Retrieved content, not LLM.
+        counts: list = [],
+        not_counts: list = [];
 }
 
 node DecisionBody {
@@ -144,6 +155,22 @@ walker:pub seed_graph {
                 "Local news coverage -- Kearny Street pedestrian bridge demolition",
                 "Supervisor Danny Sauter (D3) -- quoted statement on constituent input",
                 "City survey data on the bridge demolition, as cited in coverage"
+            ],
+            failure_kind="channel",
+            verdict_headline="The community had a position. The official record had nothing.",
+            verdict_why="The zones match here: the Rec & Park Commission answers to the same District 3 the demolition lands on. So the failure is not geography, it is routing. An organized, in-language opposition has been talking to each other and to the press, while Supervisor Sauter says his office received no communication in support of keeping the bridge.",
+            correction_h="Put the position into the record, through the channel that counts.",
+            correction_p="Nothing needs to be persuaded here; it needs to be filed. Written comment to the Commission Secretary and CCBA speakers on the record are what the body actually counts. Volume in the wrong place is invisible to it.",
+            counts=[
+                "Written comment to the Commission Secretary, one distinct submitter, in their own words",
+                "In-language comment; Chinese submissions are accepted on the record",
+                "An association of record (CCBA) speaking at general public comment",
+                "A position formally logged by the D3 supervisor's office"
+            ],
+            not_counts=[
+                "Bulk-generated identical emails; staff recognise and discount them",
+                "Press coverage and social posts; they do not enter the Commission record",
+                "Protest outside the site alone, with nothing filed"
             ]
         );
         ps[0] +>:decided_by:+> recpark[0];
@@ -214,6 +241,21 @@ walker:pub seed_graph {
                 "District-level returns, November 2024 general election",
                 "Campaign finance filings -- opposition committee spending",
                 "First Appellate District -- CEQA challenge and appeal record"
+            ],
+            failure_kind="electorate",
+            verdict_headline="Your outreach is aimed at people who already agree.",
+            verdict_why="Prop K passed citywide with 54.73%. It lost roughly 60-40 in the Sunset and 70-30 in the Richmond. The opposition was well funded and well organized, and it spent almost all of it inside the districts that already voted no. The impact zone and the decision zone are different graphs.",
+            correction_h="Target undecided voters outside the impact zone.",
+            correction_p="Every dollar spent west of Sunset Blvd is spent on people who already vote no. The persuadable surface is the eastside districts that heard 'a new park' and nothing about traffic or utilisation.",
+            counts=[
+                "Valid signatures from registered SF voters, citywide",
+                "Persuasion of voters in districts that have not already decided",
+                "Disclosed, compliant spending under FPPC and SF Ethics rules"
+            ],
+            not_counts=[
+                "District-concentrated outreach in Sunset and Richmond, already decided",
+                "Public comment to the Board of Supervisors, the wrong body for a measure",
+                "Litigation after certification; the 2024 CEQA challenge lost and was appealed"
             ]
         );
         pk[0] +>:decided_by:+> electorate[0];
@@ -367,16 +409,88 @@ walker:pub issue_detail {
             path.append({"kind": "GeoZone", "label": impact_zone.name, "via": "impacts"});
         }
 
-        # --- divergence: no single node holds this answer
-        divergence = None;
+        # --- zones + divergence ------------------------------------------
+        # The divergence answer lives in no single node: it is either the
+        # comparison of two terminal GeoZones, or an explicit channel failure
+        # seeded on the Issue when the zones already match.
+        zones_match = False;
         if decision_zone is not None and impact_zone is not None {
-            if decision_zone.name != impact_zone.name {
-                divergence = {
-                    "impact": impact_zone.name,
-                    "decision": decision_zone.name,
-                    "kind": "electorate" if decision_zone.kind == "citywide" else "channel"
-                };
+            zones_match = decision_zone.name == impact_zone.name;
+        }
+
+        kind = issue.failure_kind;
+        if kind == "" and decision_zone is not None and impact_zone is not None {
+            if not zones_match {
+                kind = "electorate" if decision_zone.kind == "citywide" else "channel";
             }
+        }
+
+        divergence = None;
+        if kind != "" {
+            divergence = {
+                "impact": impact_zone.name if impact_zone is not None else "",
+                "decision": decision_zone.name if decision_zone is not None else "",
+                "kind": kind,
+                "match": zones_match,
+                "headline": issue.verdict_headline,
+                "why": issue.verdict_why,
+                "correction_h": issue.correction_h,
+                "correction_p": issue.correction_p
+            };
+        }
+
+        # Human-readable route hops for the decision-routing page. Separate
+        # from `path`, which also carries impact / precedent hops for the
+        # engineer-facing traversal.
+        route: list = [];
+        route.append({
+            "role": "The issue",
+            "name": issue.title,
+            "note": issue.district,
+            "edge": "root",
+            "deadline": False,
+            "unverified": False
+        });
+        if body is not None {
+            route.append({
+                "role": "Is decided by",
+                "name": body.name,
+                "note": body.accountable_note,
+                "edge": "decided_by",
+                "deadline": False,
+                "unverified": body.source_url == ""
+            });
+        }
+        if decision_zone is not None {
+            route.append({
+                "role": "Which answers to",
+                "name": decision_zone.name,
+                "note": "Not the impact zone." if not zones_match else "The same zone the impact lands on.",
+                "edge": "accountable_to",
+                "deadline": False,
+                "unverified": False
+            });
+        }
+        if channel is not None {
+            route.append({
+                "role": "Accepts input via",
+                "name": channel.name,
+                "note": channel.format,
+                "edge": "accepts_input_via",
+                "deadline": False,
+                "unverified": channel.source_url == ""
+            });
+        }
+        if deadline is not None {
+            due_missing = deadline.source_url == "" or deadline.due == "";
+            route.append({
+                "role": "By",
+                "name": deadline.label,
+                "note": "No verified source found. Quorum will not guess." if due_missing else deadline.due,
+                "edge": "has_deadline",
+                "deadline": True,
+                "unverified": due_missing
+            });
         }
 
         resources: list = [];
@@ -404,6 +518,18 @@ walker:pub issue_detail {
                 "label": deadline.label,
                 "value": deadline.due if deadline.due != "" else "No record retrieved",
                 "source_url": deadline.source_url, "retrieved_at": deadline.retrieved_at
+            });
+        }
+
+        # Sources table rows -- same facts as resources, plus an explicit
+        # verified flag so the UI never has to infer it.
+        sources: list = [];
+        for r in resources {
+            sources.append({
+                "fact": r["label"] + ": " + r["value"],
+                "source": r["source_url"] if r["source_url"] != "" else "Not found",
+                "retrieved": r["retrieved_at"] if r["retrieved_at"] != "" else "Not found",
+                "verified": r["source_url"] != ""
             });
         }
 
@@ -440,8 +566,15 @@ walker:pub issue_detail {
             "tier": issue.tier, "short": issue.short,
             "problem": issue.problem, "srcs": issue.srcs,
             "divergence": divergence,
+            "zones_match": zones_match,
+            "impact_zone": impact_zone.name if impact_zone is not None else "",
+            "decision_zone": decision_zone.name if decision_zone is not None else "",
             "organizers": orgs,
             "resources": resources,
+            "sources": sources,
+            "route": route,
+            "counts": issue.counts,
+            "not_counts": issue.not_counts,
             "precedents": precedents,
             "actions": actions,
             "path": path
