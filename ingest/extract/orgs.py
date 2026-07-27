@@ -1,7 +1,7 @@
 # ============================================================
 # orgs.py — Organization contact extraction (Task 5).
 #
-# Hard rule from p1ingestion.md §0.2: org-level contacts only.
+# Hard rule from docs/p1ingestion.md §0.2: org-level contacts only.
 # Never collect named individuals, never build person-level
 # records. If a page lists individuals, extract the org email
 # and discard the rest. `inside_process` is set by hand in

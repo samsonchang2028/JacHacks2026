@@ -1,7 +1,7 @@
 # ============================================================
 # socrata.py — DataSF / Socrata SODA client.
 #
-# Cheaper and more reliable than scraping (§3 of p1ingestion.md).
+# Cheaper and more reliable than scraping (§3 of docs/p1ingestion.md).
 # Dataset IDs are NEVER hardcoded — every ID is resolved against
 # the Socrata discovery catalog at runtime, logged, and cached,
 # because IDs drift and a stale one fails silently with 0 rows.

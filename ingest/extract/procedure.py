@@ -3,7 +3,7 @@
 #
 # Highest-value output in the pipeline: this backs the headline
 # demo artifact (a real, deadlined, correctly-addressed comment
-# ask). Hard rule from p1ingestion.md §0.3: a Deadline or
+# ask). Hard rule from docs/p1ingestion.md §0.3: a Deadline or
 # CommentChannel without a working source_url does not get
 # written. `found: false` -> emit nothing. Never let the model
 # guess a date — "unknown" is a literal string, not a fallback

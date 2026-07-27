@@ -1,5 +1,5 @@
 # ============================================================
-# orgs.yaml — outreach targets (§4 of p1ingestion.md).
+# orgs.yaml — outreach targets (§4 of docs/p1ingestion.md).
 #
 # `inside_process` is set by hand here, never by the model — it's
 # the judgment call that carries Portsmouth Square's whole argument
@@ -7,7 +7,7 @@
 #
 # `case: prop-k-great-highway` orgs deliberately have no aligned
 # eastside intermediaries (see "The eastside problem" in
-# p1ingestion.md §4) — org outreach is expected to resolve to
+# docs/p1ingestion.md §4) — org outreach is expected to resolve to
 # westside-only orgs for that case. That's the honest finding, not
 # a gap in the scrape.
 # ============================================================

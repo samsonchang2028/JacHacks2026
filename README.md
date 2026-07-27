@@ -5,12 +5,13 @@ is countable, on the record, and aimed at whoever actually decides. Quorum
 routes a civic issue to the body, channel, and deadline that count — and says
 so explicitly when the impact zone and the decision zone diverge.
 
-Where to read next: [`PACKAGE_INDEX.md`](PACKAGE_INDEX.md) (what lives where)
-· [`OVERVIEW.md`](OVERVIEW.md) (product overview) ·
-[`DESIGNDOC.md`](DESIGNDOC.md) (full vision) ·
-[`p1ingestion.md`](p1ingestion.md) (ingestion spec) ·
-[`FRONTEND.md`](FRONTEND.md) (UI reference) ·
-[`IMPLEMENTATION_STATUS.md`](IMPLEMENTATION_STATUS.md) (state of the build).
+Where to read next: [`DEVPOST.md`](DEVPOST.md) (the submission) ·
+[`docs/PACKAGE_INDEX.md`](docs/PACKAGE_INDEX.md) (what lives where) ·
+[`docs/OVERVIEW.md`](docs/OVERVIEW.md) (product overview) ·
+[`docs/DESIGNDOC.md`](docs/DESIGNDOC.md) (full vision) ·
+[`docs/p1ingestion.md`](docs/p1ingestion.md) (ingestion spec) ·
+[`docs/FRONTEND.md`](docs/FRONTEND.md) (UI reference) ·
+[`docs/IMPLEMENTATION_STATUS.md`](docs/IMPLEMENTATION_STATUS.md) (state of the build).
 
 ## Quick start — the demo
 
@@ -37,13 +38,13 @@ This repo has three halves:
   contacts, procedural comment channels) and turns it into the JSON contract
   (`out/fixture.json`) that feeds the graph.
 - **UI (`pages/`, `components/`, `assets/`, root `main.jac`)** — Jac fullstack
-  frontend. See [`FRONTEND.md`](FRONTEND.md) for routes, files, and walker
+  frontend. See [`docs/FRONTEND.md`](docs/FRONTEND.md) for routes, files, and walker
   endpoints. Run with `jac start main.jac --dev` (app on :8000, API on :8001).
 
 Note: the UI seeds its curated demo graph in root `main.jac` and then reads
 the pipeline's artifact **`out/fixture.json`** through `fixture_bridge.jac`
 (testimony, forum signal, verified channels, org contacts — attached at seed
-time with provenance-based case mapping; see `FRONTEND.md` § Backend artifact
+time with provenance-based case mapping; see `docs/FRONTEND.md` § Backend artifact
 wiring). Wiring the UI to the `schemas/` walkers themselves (recourse,
 evidence, campaign) is still follow-up work; both trees coexist.
 
@@ -245,7 +246,7 @@ This was run live against production sources, not mocked:
 - **22 testimony records** (4 curated + 18 pulled from Wind News, Richmond
   Sunset News, SF Public Press, SPUR) — all with source URLs, all with
   private individuals' names scrubbed to roles per the no-fabrication rules
-  in `p1ingestion.md` §0.
+  in `docs/p1ingestion.md` §0.
 
 **What didn't resolve, on purpose left as a gap and not a guess:** SF Rec &
 Park Commission's and the D3 Supervisor's Office's own public-comment

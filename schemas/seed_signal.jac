@@ -110,7 +110,7 @@ def seed_signal() {
     # not a project-specific comment channel. No live, citable channel for
     # either body — leaving this a GAP (not a guess) is itself the finding:
     # it's the same gap Danny Sauter's office confirmed (§Failure Mode A in
-    # DESIGNDOC.md). DecisionWalker will report it in smoke.jac.
+    # docs/DESIGNDOC.md). DecisionWalker will report it in smoke.jac.
     #
     # Pattern once you have a real source:
     #   ch = CommentChannel(recipient="...", method="email",
@@ -151,7 +151,7 @@ def seed_signal() {
     # Replaced with the specific orgs from config/orgs.yaml (Task 5) —
     # more actionable than the generic placeholders this case started with.
     # These are impact-zone (westside) organizing contacts, not a decision-
-    # zone intermediary — per DESIGNDOC.md's "eastside problem", no such
+    # zone intermediary — per docs/DESIGNDOC.md's "eastside problem", no such
     # intermediary exists for Prop K, and we didn't invent one.
     richmond_ctr = Organization(name="Richmond Neighborhood Center",
                                 community="Richmond residents",

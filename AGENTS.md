@@ -8,9 +8,9 @@ Build Quorum as a Jac-native civic-action graph. The product identifies the diff
 
 Before coding, read:
 
-- `PACKAGE_INDEX.md`
+- `docs/PACKAGE_INDEX.md`
 - every file in `docs/`
-- `IMPLEMENTATION_STATUS.md`
+- `docs/IMPLEMENTATION_STATUS.md`
 - existing compiler and test output
 
 ## Architecture invariants
@@ -55,7 +55,7 @@ MVP excludes:
 - Compile after every change.
 - Use current installed Jac syntax.
 - Never rewrite working Jac into another language to avoid an error.
-- Update `IMPLEMENTATION_STATUS.md`.
+- Update `docs/IMPLEMENTATION_STATUS.md`.
 - State which files changed and what remains incomplete.
 
 ## Jac share

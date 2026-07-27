@@ -15,7 +15,7 @@
 # this is a small, non-commercial civic-hackathon ingest and the
 # team has chosen to accept that, stated plainly.
 #
-# Hard rules carried over from p1ingestion.md §0:
+# Hard rules carried over from docs/p1ingestion.md §0:
 #   - usernames are NEVER stored. Every author is scrubbed to the
 #     generic role "resident commenter" before anything is cached
 #     or returned. Forum posts are Incident-adjacent context, not
@@ -192,7 +192,7 @@ def fetch_threads(permalinks: list[str], max_comments: int = 15,
 
 def summarize_incident(records: list[dict]) -> dict | None:
     """Aggregate one case's posts into a single fixture-shaped Incident
-    (p1ingestion.md Task 7: thread counts and topic frequency only — never
+    (docs/p1ingestion.md Task 7: thread counts and topic frequency only — never
     usernames, never quoted comments as Testimony). kind='forum' rather
     than shoehorning into '311'/'complaint_log'; source_url is the
     most-engaged thread's permalink so the citation resolves to something
