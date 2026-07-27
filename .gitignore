@@ -1,4 +1,4 @@
-.env
+﻿.env
 .venv/
 __pycache__/
 *.pyc
@@ -10,5 +10,8 @@ out/drafts/
 .agents/
 .codex/
 .impeccable/
+.claude/
 skills-lock.json
 node_modules/
+.vscode/
+.idea/

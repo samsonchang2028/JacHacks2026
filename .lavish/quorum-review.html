@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quorum Review Surface</title>
+  <style>
+    :root {
+      --bg: #fff8ef;
+      --panel: rgba(255, 252, 247, 0.94);
+      --panel-strong: #ffffff;
+      --border: #eaded2;
+      --ink: #173f45;
+      --muted: #596b6b;
+      --coral: #de5b49;
+      --coral-soft: #ffe2dd;
+      --aqua: #d8f0f1;
+      --aqua-strong: #8bd3d7;
+      --mustard: #fff3cf;
+      --sage: #dbeade;
+      --lavender: #ece5fb;
+      --shadow: 0 18px 45px rgba(83, 55, 37, 0.08);
+      --radius-xl: 30px;
+      --radius-lg: 22px;
+      --radius-md: 16px;
+      --radius-pill: 999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      min-width: 0;
+    }
+
+    html {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 2% 18%, rgba(246, 176, 142, 0.26), transparent 27rem),
+        radial-gradient(circle at 96% 88%, rgba(139, 211, 215, 0.25), transparent 30rem),
+        var(--bg);
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .shell {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 22px 28px;
+      border-bottom: 1px solid rgba(234, 222, 210, 0.9);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .brand,
+    .topbar-nav,
+    .hero-actions,
+    .badge-row,
+    .stat-row,
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      gap: 10px;
+      font-weight: 850;
+      letter-spacing: 0.01em;
+    }
+
+    .brand-mark {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--coral), #f6b08e);
+      box-shadow: 0 10px 24px rgba(222, 91, 73, 0.18);
+      flex: 0 0 auto;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      position: absolute;
+      content: "";
+      border-radius: 50%;
+      background: var(--bg);
+    }
+
+    .brand-mark::before {
+      top: 8px;
+      left: 8px;
+      width: 13px;
+      height: 13px;
+    }
+
+    .brand-mark::after {
+      right: 8px;
+      bottom: 9px;
+      width: 9px;
+      height: 9px;
+    }
+
+    .topbar-nav {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .topbar-nav span {
+      padding: 7px 12px;
+      border: 1px solid rgba(234, 222, 210, 0.95);
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .content {
+      padding: 28px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 16px;
+      font-size: 13px;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 32px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--coral);
+      content: "";
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 700;
+      line-height: 1.02;
+    }
+
+    h1 {
+      font-size: clamp(44px, 7vw, 88px);
+      max-width: 12ch;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      font-size: clamp(28px, 4vw, 44px);
+      margin-bottom: 10px;
+    }
+
+    h3 {
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.62;
+    }
+
+    .hero-grid,
+    .two-col,
+    .tri-col,
+    .status-grid,
+    .matrix,
+    .flow-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-grid {
+      grid-template-columns: minmax(0, 1.04fr) minmax(320px, 0.96fr);
+      align-items: start;
+      margin-bottom: 28px;
+    }
+
+    .hero-copy .lead {
+      max-width: 62ch;
+      font-size: 18px;
+    }
+
+    .hero-actions {
+      margin-top: 26px;
+    }
+
+    .action-chip,
+    .badge,
+    .inline-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid rgba(234, 222, 210, 0.95);
+      background: rgba(255, 255, 255, 0.95);
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.2;
+    }
+
+    .action-chip.primary {
+      border-color: transparent;
+      color: #fff;
+      background: var(--coral);
+      box-shadow: 0 15px 28px rgba(222, 91, 73, 0.24);
+    }
+
+    .hero-aside,
+    .card,
+    .status-card,
+    .note-card,
+    .callout,
+    .matrix-card {
+      border: 1px solid rgba(234, 222, 210, 0.95);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 255, 255, 0.88);
+      box-shadow: 0 10px 28px rgba(83, 55, 37, 0.06);
+    }
+
+    .hero-aside {
+      padding: 18px;
+    }
+
+    .quote {
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, rgba(255, 226, 221, 0.9), rgba(255, 255, 255, 0.9));
+    }
+
+    .quote strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 17px;
+      line-height: 1.35;
+    }
+
+    .quote span {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      color: #bb4233;
+      background: var(--coral-soft);
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section {
+      margin-top: 26px;
+      padding: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-head p {
+      max-width: 68ch;
+    }
+
+    .two-col {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tri-col {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card,
+    .status-card,
+    .note-card,
+    .callout,
+    .matrix-card {
+      padding: 18px;
+    }
+
+    .card strong,
+    .status-card strong,
+    .matrix-card strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .mini-label {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      background: var(--aqua);
+      color: var(--ink);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .mini-label.warn {
+      background: var(--coral-soft);
+      color: #a43f31;
+    }
+
+    .mini-label.soft {
+      background: var(--mustard);
+    }
+
+    .mini-label.sage {
+      background: var(--sage);
+    }
+
+    .stat-row {
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      flex: 1 1 180px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(248, 242, 234, 0.8);
+      border: 1px solid rgba(234, 222, 210, 0.9);
+    }
+
+    .stat b {
+      display: block;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .status-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .status-card {
+      min-height: 180px;
+    }
+
+    .status-card.ok {
+      background: linear-gradient(180deg, rgba(216, 240, 241, 0.58), rgba(255, 255, 255, 0.9));
+    }
+
+    .status-card.partial {
+      background: linear-gradient(180deg, rgba(255, 243, 207, 0.62), rgba(255, 255, 255, 0.92));
+    }
+
+    .status-card.missing {
+      background: linear-gradient(180deg, rgba(255, 226, 221, 0.62), rgba(255, 255, 255, 0.92));
+    }
+
+    .status-card ul,
+    .matrix-card ul,
+    .callout ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .matrix {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+    }
+
+    .matrix-card.current {
+      border-color: rgba(234, 222, 210, 1);
+    }
+
+    .matrix-card.target {
+      border-color: rgba(139, 211, 215, 0.55);
+      background: linear-gradient(180deg, rgba(216, 240, 241, 0.5), rgba(255, 255, 255, 0.92));
+    }
+
+    .matrix-card.risk {
+      border-color: rgba(222, 91, 73, 0.3);
+      background: linear-gradient(180deg, rgba(255, 226, 221, 0.48), rgba(255, 255, 255, 0.92));
+    }
+
+    .mermaid-wrap {
+      overflow: auto hidden;
+      margin-top: 6px;
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(248, 242, 234, 0.72);
+      border: 1px solid rgba(234, 222, 210, 0.95);
+    }
+
+    .mermaid {
+      min-width: 720px;
+    }
+
+    .flow-grid {
+      grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+      align-items: start;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    thead th {
+      padding: 14px 14px 12px;
+      text-align: left;
+      color: var(--ink);
+      background: rgba(216, 240, 241, 0.55);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    tbody td {
+      padding: 14px;
+      vertical-align: top;
+      color: var(--muted);
+      border-top: 1px solid rgba(234, 222, 210, 0.8);
+      line-height: 1.5;
+    }
+
+    tbody td:first-child {
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .legend {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .legend .inline-pill {
+      min-height: 0;
+      padding: 7px 10px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .callout {
+      background: linear-gradient(135deg, rgba(236, 229, 251, 0.72), rgba(255, 255, 255, 0.92));
+    }
+
+    .footer-note {
+      margin-top: 22px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: rgba(248, 242, 234, 0.82);
+      border: 1px solid rgba(234, 222, 210, 0.9);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 0.95em;
+      color: var(--ink);
+      background: rgba(216, 240, 241, 0.5);
+      padding: 2px 6px;
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 1080px) {
+      .hero-grid,
+      .two-col,
+      .flow-grid,
+      .status-grid,
+      .matrix {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        padding: 14px;
+      }
+
+      .topbar,
+      .content {
+        padding: 18px;
+      }
+
+      h1 {
+        font-size: 52px;
+      }
+
+      .section {
+        padding: 18px;
+      }
+
+      .section-head {
+        align-items: start;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <main class="panel">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Quorum</span>
+        </div>
+        <div class="topbar-nav" aria-label="Artifact sections">
+          <span>Current build</span>
+          <span>Graph design</span>
+          <span>Demo gaps</span>
+          <span>Next slices</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Lavish review surface</p>
+            <h1>Make the Quorum MVP legible before more code lands.</h1>
+            <p class="lead">
+              This page turns the current repo state into something easy to review:
+              what already exists, what the Jac graph still needs, and where the
+              Portsmouth Square and Proposition K demo moments should appear.
+            </p>
+            <div class="hero-actions" aria-label="Review summary">
+              <span class="action-chip primary">Current UI shell exists</span>
+              <span class="action-chip">Graph models missing</span>
+              <span class="action-chip">Walkers missing</span>
+              <span class="action-chip">Fixture data missing</span>
+            </div>
+            <div class="stat-row" aria-label="Quick status counts">
+              <div class="stat">
+                <b>4</b>
+                <span>implemented app files reviewed</span>
+              </div>
+              <div class="stat">
+                <b>0</b>
+                <span>model files under <code>models/</code></span>
+              </div>
+              <div class="stat">
+                <b>0</b>
+                <span>walker files under <code>walkers/</code></span>
+              </div>
+              <div class="stat">
+                <b>0</b>
+                <span>fixture files under <code>data/</code></span>
+              </div>
+            </div>
+          </div>
+
+          <aside class="hero-aside">
+            <div class="badge-row" aria-label="Design source">
+              <span class="badge">Design source: existing project CSS</span>
+              <span class="badge">Palette: warm ivory + teal + coral</span>
+            </div>
+            <div class="quote">
+              <strong>The community had a position. The record had nothing.</strong>
+              <p>
+                The current landing page already expresses the thesis well. The
+                biggest product risk is not tone. It is the missing graph-backed
+                middle of the demo.
+              </p>
+              <div style="height: 10px"></div>
+              <span>Primary demo risk</span>
+            </div>
+            <div class="footer-note">
+              This artifact is aimed at product review, not code review. Annotate
+              sections where the framing, screen order, or implementation slices
+              should change before more Jac files get generated.
+            </div>
+          </aside>
+        </section>
+
+        <section class="section card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Current repo state</p>
+              <h2>What exists already</h2>
+            </div>
+            <p>
+              The repo has a clear visual identity and a good hero. It does not
+              yet have the persistent graph or retrieved procedural records needed
+              for the promised civic routing workflow.
+            </p>
+          </div>
+
+          <div class="status-grid">
+            <article class="status-card ok">
+              <span class="mini-label">Strong</span>
+              <strong>Landing page thesis</strong>
+              <p>
+                The hero headline, supporting copy, and Portsmouth Square framing
+                already match the project brief closely.
+              </p>
+              <ul>
+                <li>Warm editorial styling is already established.</li>
+                <li>Portsmouth Square and Prop K are exposed as demo entry points.</li>
+                <li>The main message is short and procedural.</li>
+              </ul>
+            </article>
+
+            <article class="status-card ok">
+              <span class="mini-label soft">Good foundation</span>
+              <strong>Lightweight visual system</strong>
+              <p>
+                The CSS uses the exact palette and tone the project doc calls for:
+                ivory, teal, coral, rounded cards, soft borders, and minimal
+                shadows.
+              </p>
+              <ul>
+                <li>Friendly instead of dashboard-heavy.</li>
+                <li>Reduced-motion support already exists.</li>
+                <li>Map hero is lightweight and legible.</li>
+              </ul>
+            </article>
+
+            <article class="status-card partial">
+              <span class="mini-label warn">Partial</span>
+              <strong>Navigation and app shell</strong>
+              <p>
+                There is a shared layout and a placeholder actions page, but the
+                flow stops before the procedural playbook, graph traversal, or
+                verification states appear.
+              </p>
+              <ul>
+                <li><code>pages/actions.jac</code> is still a stub.</li>
+                <li>No source badges or evidence ranking UI yet.</li>
+                <li>No case detail screen yet.</li>
+              </ul>
+            </article>
+
+            <article class="status-card missing">
+              <span class="mini-label warn">Missing</span>
+              <strong>Graph-backed demo core</strong>
+              <p>
+                The repo directories for models, walkers, services, AI, and data
+                are present, but the critical demo logic is still absent.
+              </p>
+              <ul>
+                <li>No graph nodes or edges defined.</li>
+                <li>No walker outputs for UI to consume.</li>
+                <li>No cached fixture inputs for offline reliability.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Current vs target</p>
+              <h2>What Quorum promises versus what the repo can demo today</h2>
+            </div>
+            <p>
+              This comparison is the practical heart of the review. If you want to
+              change scope, comment here first.
+            </p>
+          </div>
+
+          <div class="matrix">
+            <article class="matrix-card current">
+              <span class="mini-label">Today</span>
+              <strong>Presentable hero, incomplete product loop</strong>
+              <ul>
+                <li>Landing page looks like Quorum.</li>
+                <li>Hero map already supports the Portsmouth Square story.</li>
+                <li>Navigation exists for "How it works" and "Find Actions".</li>
+                <li>The graph, evidence, and outreach layers are not wired.</li>
+              </ul>
+            </article>
+
+            <article class="matrix-card target">
+              <span class="mini-label sage">Hackathon target</span>
+              <strong>Graph-driven walkthrough with cited procedure</strong>
+              <ul>
+                <li>Ingest grows the graph visibly from cached case records.</li>
+                <li>DecisionWalker and ImpactWalker resolve different zones.</li>
+                <li>DivergenceCheck produces a concrete warning and reroute.</li>
+                <li>EvidenceMatcher and PrecedentMatcher feed the playbook.</li>
+              </ul>
+            </article>
+
+            <article class="matrix-card risk">
+              <span class="mini-label warn">Most likely failure mode</span>
+              <strong>Beautiful shell, missing procedural proof</strong>
+              <ul>
+                <li>The app could look polished while still guessing key facts.</li>
+                <li>The UI could hardcode divergence instead of reading walkers.</li>
+                <li>The demo could depend on live retrieval instead of fixtures.</li>
+                <li>The outreach screen could arrive before verified source states.</li>
+              </ul>
+            </article>
+          </div>
+        </section>
+
+        <section class="section card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Graph architecture</p>
+              <h2>The Jac core the UI is waiting on</h2>
+            </div>
+            <p>
+              The important visual moment is not just "show a graph". It is
+              showing how impact zone and decision zone become separate traversals
+              that can disagree.
+            </p>
+          </div>
+
+          <div class="flow-grid">
+            <div class="mermaid-wrap">
+              <pre class="mermaid">
+flowchart LR
+  Issue["Issue"] -->|decided_by| Decision["DecisionBody"]
+  Issue -->|affects| Impact["GeoZone<br/>impact zone"]
+  Decision -->|accountable_to| DecisionZone["GeoZone<br/>decision zone"]
+  Decision -->|accepts_input_via| Channel["CommentChannel"]
+  Channel -->|closes_on| Deadline["Deadline"]
+  Narrative["Narrative / complaint"] -->|supports_claim_under| Standard["LegalStandard"]
+  Issue -->|analogous_to| Case["PrecedentCase"]
+  Case -->|used| Tactic["Tactic"]
+  Case -->|produced| Outcome["Outcome"]
+  Case -->|relied_on| Standard
+  Impact -. compared by .-> Divergence["DivergenceCheck"]
+  DecisionZone -. compared by .-> Divergence
+              </pre>
+            </div>
+
+            <aside class="callout">
+              <span class="mini-label warn">Critical path</span>
+              <strong>The first real walker payoff</strong>
+              <ul>
+                <li><b>DecisionWalker:</b> who decides, who they answer to, what channel counts, what deadline applies.</li>
+                <li><b>ImpactWalker:</b> who is affected, which organizations can mobilize them.</li>
+                <li><b>DivergenceCheck:</b> compare the terminal zones and warn when the outreach target is wrong.</li>
+              </ul>
+            </aside>
+          </div>
+
+          <div class="legend" aria-label="Architecture notes">
+            <span class="inline-pill">Do not flatten <code>accountable_to</code></span>
+            <span class="inline-pill">Procedural facts stay retrieval-only</span>
+            <span class="inline-pill">LLM proposes, graph stores, walker ranks</span>
+          </div>
+        </section>
+
+        <section class="section card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Demo coverage</p>
+              <h2>Acceptance criteria mapped to the current repo</h2>
+            </div>
+            <p>
+              This table is useful for scoping comments. Mark anything that should
+              be cut, delayed, or rephrased for the demo.
+            </p>
+          </div>
+
+          <table aria-label="Acceptance criteria coverage">
+            <thead>
+              <tr>
+                <th>Demo requirement</th>
+                <th>Repo status now</th>
+                <th>What still needs to exist</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Portsmouth Square lead case</td>
+                <td>Thesis and hero copy exist.</td>
+                <td>Case data, case detail screen, graph ingest sequence.</td>
+              </tr>
+              <tr>
+                <td>Graph visibly grows</td>
+                <td>No models or graph UI yet.</td>
+                <td>Real node creation plus a visible ingest timeline or canvas.</td>
+              </tr>
+              <tr>
+                <td>DecisionWalker output</td>
+                <td>Not implemented.</td>
+                <td>Decision body, accountable zone, comment channel, deadline.</td>
+              </tr>
+              <tr>
+                <td>ImpactWalker output</td>
+                <td>Not implemented.</td>
+                <td>Affected geography and mobilizing organizations.</td>
+              </tr>
+              <tr>
+                <td>DivergenceCheck warning</td>
+                <td>Implied by the hero illustration only.</td>
+                <td>Actual walker comparison rendered as UI state.</td>
+              </tr>
+              <tr>
+                <td>Cited procedural playbook</td>
+                <td>Not implemented.</td>
+                <td>Verified source badges, retrieval dates, and gap states.</td>
+              </tr>
+              <tr>
+                <td>EvidenceMatcher and PrecedentMatcher</td>
+                <td>Not implemented.</td>
+                <td>Ranked evidence, similar case cards, legal-standard links.</td>
+              </tr>
+              <tr>
+                <td>Bilingual outreach packet</td>
+                <td>Not implemented.</td>
+                <td>English and Chinese drafts clearly labeled AI-generated.</td>
+              </tr>
+              <tr>
+                <td>Prop K electorate mismatch</td>
+                <td>Only linked from the hero.</td>
+                <td>Cached case input and a separate divergence screen.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="section card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Recommended build order</p>
+              <h2>The smallest sequence that can still land the demo</h2>
+            </div>
+            <p>
+              This ordering prefers demo reliability over abstract completeness.
+              If the sequence feels wrong, annotate the slice you would reorder.
+            </p>
+          </div>
+
+          <div class="tri-col">
+            <article class="note-card">
+              <span class="mini-label">Slice 1</span>
+              <strong>Fixture-first graph skeleton</strong>
+              <p>
+                Create the node and edge types, then load just enough cached
+                Portsmouth Square and Prop K data to drive the walkers offline.
+              </p>
+            </article>
+            <article class="note-card">
+              <span class="mini-label soft">Slice 2</span>
+              <strong>Decision and impact traversal</strong>
+              <p>
+                Implement DecisionWalker, ImpactWalker, and DivergenceCheck before
+                spending time on richer AI outputs.
+              </p>
+            </article>
+            <article class="note-card">
+              <span class="mini-label sage">Slice 3</span>
+              <strong>Procedural playbook with citations</strong>
+              <p>
+                Put verified source state in the UI early so nothing later
+                encourages guessing deadlines or channels.
+              </p>
+            </article>
+            <article class="note-card">
+              <span class="mini-label">Slice 4</span>
+              <strong>Evidence and precedent ranking</strong>
+              <p>
+                Once the graph and cited facts exist, add ranked narrative and
+                precedent outputs to deepen the Portsmouth Square walkthrough.
+              </p>
+            </article>
+            <article class="note-card">
+              <span class="mini-label soft">Slice 5</span>
+              <strong>Outreach packet generation</strong>
+              <p>
+                Draft English and Chinese outreach only after the procedural
+                payload is locked and visibly verified.
+              </p>
+            </article>
+            <article class="note-card">
+              <span class="mini-label warn">Guardrail</span>
+              <strong>Do not hardcode the punchline</strong>
+              <p>
+                The divergence warning, deadlines, and channels should show up
+                because the walkers found them, not because the UI knows the case.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section card">
+          <div class="section-head">
+            <div>
+              <p class="eyebrow">Review prompts</p>
+              <h2>What to comment on in Lavish</h2>
+            </div>
+            <p>
+              The goal here is to make your next feedback pass targeted instead of
+              broad. Annotate the section that carries the decision.
+            </p>
+          </div>
+
+          <div class="two-col">
+            <article class="callout">
+              <span class="mini-label">Product questions</span>
+              <ul>
+                <li>Is the recommended build order right for the hackathon clock?</li>
+                <li>Should Portsmouth Square own more of the first-run experience?</li>
+                <li>Do you want the graph growth moment to be more literal or more editorial?</li>
+              </ul>
+            </article>
+
+            <article class="callout">
+              <span class="mini-label warn">Implementation questions</span>
+              <ul>
+                <li>Should the artifact be followed by code implementation in this repo next?</li>
+                <li>Do you want one unified analysis screen or several focused screens?</li>
+                <li>Which acceptance criteria can be cut if time gets tight?</li>
+              </ul>
+            </article>
+          </div>
+
+          <div class="footer-note">
+            Built from the existing Quorum design language already present in
+            <code>assets/quorum.css</code>, because the artifact is reviewing this
+            app specifically and should match its tone rather than introducing a
+            new visual system.
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      themeVariables: {
+        background: "#fff8ef",
+        primaryColor: "#ffffff",
+        primaryTextColor: "#173f45",
+        primaryBorderColor: "#eaded2",
+        lineColor: "#173f45",
+        secondaryColor: "#d8f0f1",
+        tertiaryColor: "#ffe2dd",
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+      },
+      flowchart: {
+        curve: "basis"
+      }
+    });
+  </script>
+</body>
+</html>
