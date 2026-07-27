@@ -427,6 +427,58 @@ def:pub SourcesTable(sources: list) -> JsxElement {
 # forum thread is signal that exists, not a countable submission and not an
 # endorsement.
 
+# The compact briefing from the report layer (out/reports/<slug>.json).
+# The summary text is generated and labeled as such; procedural facts keep
+# living in the cited sections below it. Renders nothing until the walker
+# responds; a null/unavailable brief renders nothing at all.
+def:pub BriefingCard(brief: any) -> JsxElement {
+    if not brief or not brief["available"] {
+        return <></>;
+    }
+    meta = brief["summarized_from"];
+    return
+        <section className="briefing" id="briefing">
+            <div className="briefing-head">
+                {
+                    <StatusPill kind="info" label="AI-generated summary"/>
+                    if brief["ai_generated"] else
+                    <StatusPill kind="warn" label="Deterministic summary — LLM unavailable"/>
+                }
+                <span className="briefing-meta">
+                    {"Summarized from " + str(meta["statements"]) + " statements · "
+                        + str(meta["threads"]) + " threads · "
+                        + str(meta["actions"]) + " actions · generated "
+                        + brief["generated_at"][:10]}
+                </span>
+            </div>
+            <p className="briefing-verdict">{brief["verdict_line"]}</p>
+            <p className="briefing-body">{brief["stakes"]}</p>
+            <p className="briefing-body">{brief["record_gap"]}</p>
+            <ol className="briefing-next">
+                {[
+                    <li key={"bn-" + str(i)}>{step}</li>
+                    for (i, step) in enumerate(brief["do_next"])
+                ]}
+            </ol>
+            <p className="briefing-fine">
+                The summary text above is generated. Every procedural fact —
+                who decides, channels, deadlines, sources — is retrieved and
+                cited in the sections below, or shown as a gap. Not reviewed
+                by counsel.
+            </p>
+        </section>;
+}
+
+# While the briefing walker is in flight (instant when the report artifact
+# is cached; a live LLM run when it is not).
+def:pub BriefingPending() -> JsxElement {
+    return
+        <section className="briefing pending" aria-live="polite">
+            <StatusPill kind="info" label="AI-generated summary"/>
+            <p className="briefing-body muted">Summarizing the record…</p>
+        </section>;
+}
+
 # The hand-set inside_process judgment from the pipeline ("" = no record).
 def:pub ProcessPill(inside_process: str) -> JsxElement {
     if inside_process == "true" {
@@ -450,33 +502,63 @@ def:pub KindPill(kind: str) -> JsxElement {
     return <StatusPill kind="info" label={kind}/>;
 }
 
+def:pub QuoteCard(t: any, idx: int) -> JsxElement {
+    return
+        <article className="quote" key={"q-" + str(idx)}>
+            <div className="quote-head">
+                <KindPill kind={t["kind"]}/>
+                <span className="quote-speaker">{t["speaker"]}</span>
+                {
+                    <span className="lang-tag">中文</span>
+                    if t["language"] == "zh" else <></>
+                }
+            </div>
+            <p className="quote-claim">{t["claim"]}</p>
+            <div className="quote-meta">
+                {
+                    <span className="quote-affil">{t["affiliation"]}</span>
+                    if t["affiliation"] != "" and t["affiliation"] != t["speaker"] else <></>
+                }
+                <CitationChip source_url={t["source_url"]} retrieved_at=""/>
+            </div>
+        </article>;
+}
+
+# Three quotes up front; the rest behind a toggle. The briefing card above
+# carries the compressed read, so the wall no longer has to.
 def:pub RecordWall(testimony: list) -> JsxElement {
     if len(testimony) == 0 {
         return <></>;
     }
+    head = testimony[:3];
+    rest = testimony[3:];
     return
-        <div className="record-wall">
-            {[
-                <article className="quote" key={"q-" + str(i)}>
-                    <div className="quote-head">
-                        <KindPill kind={t["kind"]}/>
-                        <span className="quote-speaker">{t["speaker"]}</span>
-                        {
-                            <span className="lang-tag">中文</span>
-                            if t["language"] == "zh" else <></>
-                        }
+        <>
+            <div className="record-wall">
+                {[<QuoteCard t={t} idx={i} key={"qh-" + str(i)}/> for (i, t) in enumerate(head)]}
+            </div>
+            {
+                <details className="more-record">
+                    <summary>{"Show all " + str(len(testimony)) + " statements"}</summary>
+                    <div className="record-wall">
+                        {[<QuoteCard t={t} idx={i + 3} key={"qr-" + str(i)}/> for (i, t) in enumerate(rest)]}
                     </div>
-                    <p className="quote-claim">{t["claim"]}</p>
-                    <div className="quote-meta">
-                        {
-                            <span className="quote-affil">{t["affiliation"]}</span>
-                            if t["affiliation"] != "" and t["affiliation"] != t["speaker"] else <></>
-                        }
-                        <CitationChip source_url={t["source_url"]} retrieved_at=""/>
-                    </div>
-                </article>
-                for (i, t) in enumerate(testimony)
-            ]}
+                </details>
+                if len(rest) > 0 else <></>
+            }
+        </>;
+}
+
+def:pub SigRow(s: any, idx: int) -> JsxElement {
+    return
+        <div className="sig-row" key={"sig-" + str(idx)}>
+            <span className="sig-count">
+                {str(s["count"])}<i>comments</i>
+            </span>
+            <div>
+                <p className="sig-summary">{s["summary"]}</p>
+                <CitationChip source_url={s["source_url"]} retrieved_at=""/>
+            </div>
         </div>;
 }
 
@@ -484,24 +566,22 @@ def:pub SignalList(signals: list) -> JsxElement {
     if len(signals) == 0 {
         return <></>;
     }
+    head = signals[:3];
+    rest = signals[3:];
     return
         <div className="signal-list">
             <p className="signal-caption">
                 Community forum signal, one row per thread. Volume here is
                 context — none of it reaches an official record.
             </p>
-            {[
-                <div className="sig-row" key={"sig-" + str(i)}>
-                    <span className="sig-count">
-                        {str(s["count"])}<i>comments</i>
-                    </span>
-                    <div>
-                        <p className="sig-summary">{s["summary"]}</p>
-                        <CitationChip source_url={s["source_url"]} retrieved_at=""/>
-                    </div>
-                </div>
-                for (i, s) in enumerate(signals)
-            ]}
+            {[<SigRow s={s} idx={i} key={"sh-" + str(i)}/> for (i, s) in enumerate(head)]}
+            {
+                <details className="more-record">
+                    <summary>{"Show all " + str(len(signals)) + " threads"}</summary>
+                    {[<SigRow s={s} idx={i + 3} key={"sr-" + str(i)}/> for (i, s) in enumerate(rest)]}
+                </details>
+                if len(rest) > 0 else <></>
+            }
         </div>;
 }
 
@@ -613,6 +693,130 @@ def:pub PipelineRecord(pipeline: any) -> JsxElement {
                 </p>
             </div>
         </details>;
+}
+
+# ---- the packet (outreach_layer -> out/drafts/) ------------------------
+# Staged outreach email drafts, one per fixture-backed association. The
+# card renders what was staged to disk; nothing on this page (or anywhere
+# in Quorum) sends mail. Contacts render verbatim from the graph -- the
+# model never sees or writes an address.
+
+def:pub DraftEmailCard(draft: any) -> JsxElement {
+    if not draft or not draft["available"] {
+        return
+            <div className="draft-card">
+                <p className="muted">No draft available for this organization.</p>
+            </div>;
+    }
+    return
+        <div className="draft-card">
+            <div className="briefing-head">
+                {
+                    <StatusPill kind="info" label="AI-generated draft"/>
+                    if draft["ai_generated"] else
+                    <StatusPill kind="warn" label="Deterministic draft — LLM unavailable"/>
+                }
+                <span className="briefing-meta">
+                    {"staged " + draft["generated_at"][:10] + " · review and send manually"}
+                </span>
+            </div>
+            <div className="draft-to">
+                <span className="kv-label">To</span>
+                {
+                    <span className="chip">{draft["to"]}</span>
+                    if draft["to"] != "" else
+                    <span className="chip gap">no org-level contact on file — draft staged only</span>
+                }
+            </div>
+            <div className="draft-subject">{draft["subject"]}</div>
+            <p className="draft-body">{draft["body_en"]}</p>
+            {
+                <details className="ctx draft-zh">
+                    <summary>中文 draft</summary>
+                    <div className="ctx-body">
+                        <p className="draft-body">{draft["body_zh"]}</p>
+                        <p className="briefing-fine">{draft["zh_note"]}</p>
+                    </div>
+                </details>
+                if draft["body_zh"] != "" else <></>
+            }
+            <p className="briefing-fine">
+                Staged draft only — Quorum sends nothing. A human reviews,
+                edits, and sends from their own account. The signal counts it
+                cites are the retrieved record above. Not reviewed by counsel.
+            </p>
+        </div>;
+}
+
+# One association row. Nested def so the click handler closes over the
+# org name without a lambda (the IssuePin pattern).
+def PacketOrgRow(org: any, draft: any, busy: str, on_draft: any) -> JsxElement {
+    def handle -> None {
+        on_draft(org["name"]);
+    }
+
+    is_busy = busy == org["name"];
+    return
+        <div className="packet-row">
+            <div className="packet-org">
+                <span className="quote-speaker">{org["name"]}</span>
+                {
+                    <span className="lang-tag">中文</span>
+                    if org["language"] == "zh" else <></>
+                }
+                {
+                    <span className="chip">{org["contact"]}</span>
+                    if org["contact"] != "" else
+                    <span className="chip gap">no org-level contact on file</span>
+                }
+                {
+                    <button className="btn btn-primary draft-btn" onClick={handle} disabled={busy != ""}>
+                        {"Drafting… (live LLM run)" if is_busy else "Draft email"}
+                    </button>
+                    if not draft else <></>
+                }
+            </div>
+            {<DraftEmailCard draft={draft}/> if draft else <></>}
+        </div>;
+}
+
+def:pub PacketBand(packet_orgs: list, drafts: list, drafting: str, on_draft: any) -> JsxElement {
+    if len(packet_orgs) == 0 {
+        return <></>;
+    }
+    return
+        <section className="band" id="packet">
+            <p className="eyebrow plain">The packet</p>
+            <h2>Outreach drafts to the associations on file</h2>
+            <p className="band-lead">
+                One draft per organization, grounded in the record above —
+                including the initial signal already collected. Each asks the
+                organization to file its own view through the channel that
+                counts; no position is presumed. Nothing is sent from here.
+            </p>
+            <div className="packet-list">
+                {[
+                    <PacketOrgRow
+                        key={o["name"]}
+                        org={o}
+                        draft={draft_for(drafts, o["name"])}
+                        busy={drafting}
+                        on_draft={on_draft}
+                    />
+                    for o in packet_orgs
+                ]}
+            </div>
+        </section>;
+}
+
+def draft_for(drafts: list, org_name: str) -> any {
+    found: any = None;
+    for d in drafts {
+        if d["org_name"] == org_name {
+            found = d;
+        }
+    }
+    return found;
 }
 
 # ---- legacy helpers still used in a few places -------------------------

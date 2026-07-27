@@ -25,6 +25,11 @@ Graph data lives in `.jac/data/*.db`. Delete those files to force a fresh `seed_
 Do that after pulling the fixture bridge (the `Organization` schema gained pipeline
 fields, and the fixture attaches once per graph).
 
+Dev-mode caveat: after editing `.jac` files, **restart** `jac start` rather than
+trusting hot reload against a persisted graph — reload re-creates archetype
+classes, so `isinstance`-based traversals (the fixture bridge, pipeline status)
+stop matching previously persisted nodes until the process restarts.
+
 ## Backend artifact wiring
 
 The UI graph reads the ingestion pipeline's artifact **`out/fixture.json`**
@@ -47,7 +52,7 @@ All pages share `pages/layout.jac` (pill nav: Home · Route an issue · Communit
 |---|---|---|
 | `/` | `pages/index.jac` | Landing: hero, why, case studies, how-it-works pipeline, pressing-now feed |
 | `/actions` | `pages/actions.jac` | Map + verdict-first issue panel. Optional `?case=<slug>` preselects a pin (defaults to Portsmouth) |
-| `/issue/:id` | `pages/issue/[id].jac` | Full decision-routing page for one issue (`:id` = issue slug) |
+| `/issue/:id` | `pages/issue/[id].jac` | Issue page: briefing → verdict → the record → next steps → the packet (outreach drafts) → collapsed background/sources. (The route and validity bands were cut for length; their content reaches the reader via the briefing, panel rows, and sources table.) |
 | `/notes` | `pages/notes.jac` | Community notes wall (read + write) |
 
 Demo slugs with a full procedural record:
@@ -70,6 +75,8 @@ Base: `http://localhost:8001`
 | `POST` | `/walker/seed_graph` | `{}` | Every page on load | `{ seeded, issues, fixture }` — idempotent seed + fixture attach (`fixture` = pipeline status/counts) |
 | `POST` | `/walker/find_issues` | `{}` | Landing feed, actions map | List of pins: `slug`, `title`, `district`, `lat`, `lng`, `tier`, `on_record` (pipeline records mapped to the issue) |
 | `POST` | `/walker/issue_detail` | `{ "slug": "<slug>" }` | Actions panel, issue page | Full workup (see below) or `{ found: false, slug }` |
+| `POST` | `/walker/issue_report` | `{ "slug": "<slug>", "regenerate": false }` | Issue page briefing card | Compact briefing (see below); cache-first from `out/reports/<slug>.json`, `regenerate: true` forces a live LLM run |
+| `POST` | `/walker/outreach_email` | `{ "slug": "<slug>", "org_name": "<name>", "regenerate": false }` | Issue page packet band | Staged outreach draft for one fixture-backed association; cache-first from `out/drafts/<slug>/<org>.json` (gitignored — drafts are staged, never committed, never sent) |
 | `POST` | `/walker/list_notes` | `{}` | Notes page | List of `{ name, body }` (newest first) |
 | `POST` | `/walker/add_note` | `{ "name": "", "body": "…" }` | Notes form | `{ ok, notes }` or `{ ok: false, error }` |
 
@@ -91,6 +98,35 @@ Base: `http://localhost:8001`
 | `pipeline` | Artifact status: `loaded`, counts, and the 3 unbound verified channels |
 | `path` | Graph traversal (demoted under Sources; now includes testimony/signal hops) |
 
+### `issue_report` payload (the briefing card)
+
+The LLM layer (`report_layer.jac`) congregates the whole workup into a compact
+briefing: `verdict_line`, `stakes`, `record_gap`, `do_next[3]`, plus
+`origin` (`llm` or `deterministic_fallback`), `ai_generated`, `model`,
+`generated_at`, `summarized_from` counts, `validation_errors`, and
+`legal_reviewed: false`. The runner is the `claude` CLI headless (same as
+`ingest/extract/forum.py` — no API key); output is validated (no URLs/emails,
+no numbers absent from the payload, no legal-conclusion phrases, exact
+structure) and any failure — including a missing CLI — falls back to a
+deterministic extract of curated fields. Results cache to
+`out/reports/<slug>.json` (checked in for the two demo slugs), so page loads
+never block on a live call. Thin issues return `{ available: false }`.
+
+### `outreach_email` payload (the packet)
+
+`outreach_layer.jac` drafts one email per association in `packet_orgs`
+(fixture-backed orgs only — enriched organizers + pipeline outreach orgs;
+individuals and campaign entities are excluded per p1ingestion §0). Each
+draft: `to` (graph contact verbatim — the model never sees an address),
+`subject`, `body_en`, `body_zh` (Traditional Chinese for zh-language orgs,
+flagged for native-speaker review; org names kept untranslated), the
+initial-signal citation (deterministically computed counts the model copies),
+`origin`/`ai_generated`/`validation_errors`/`legal_reviewed: false`, and
+`delivery: "manual_review_and_send"`. Validation adds a no-dates rule when no
+verified deadline exists. **Nothing sends** — drafts stage to
+`out/drafts/<slug>/` for human review, exactly as the ingestion spec
+requires.
+
 ### Other useful API routes (not UI-primary)
 
 | Method | Endpoint | Notes |
@@ -110,6 +146,8 @@ Base: `http://localhost:8001`
 |---|---|
 | `main.jac` | Graph schema, seed data, walkers, and client CSS imports (`app` shell) |
 | `fixture_bridge.jac` | Reads `out/fixture.json` into the UI graph: pipeline archetypes (`Testimony`, `Incident`, `PipelineChannel`, `PipelineOrg`), deterministic case mapping, per-issue projections |
+| `report_layer.jac` | LLM briefing layer: prompt + validation + deterministic fallback + `out/reports/` cache for `issue_report` |
+| `outreach_layer.jac` | The packet: per-association outreach email drafts (bilingual where flagged), initial-signal citation, no-send staging to `out/drafts/` |
 | `jac.toml` | Project config, npm deps (Leaflet, React Router), serve port |
 
 ### Pages (`pages/`)

@@ -6,21 +6,35 @@ the pointers for detail.
 
 ## Root — entry points and governance
 
+Root is kept to code entry points plus the two documents meant to be found
+immediately: the setup/demo instructions and the submission writeup.
+Everything else that used to sit at root now lives in `docs/` (below).
+
 | File | Role |
 |---|---|
-| `main.jac` | Fullstack entry point: UI graph schema, curated seed, the walkers the UI spawns (`seed_graph`, `find_issues`, `issue_detail`, `list_notes`, `add_note`), client CSS imports |
-| `fixture_bridge.jac` | Reads `out/fixture.json` into the UI graph at seed time; pipeline archetypes + deterministic case mapping + per-issue projections (`FRONTEND.md` § Backend artifact wiring) |
+| `main.jac` | Fullstack entry point: UI graph schema, curated seed, the walkers the UI spawns (`seed_graph`, `find_issues`, `issue_detail`, `issue_report`, `outreach_email`, `list_notes`, `add_note`), client CSS imports |
+| `fixture_bridge.jac` | Reads `out/fixture.json` into the UI graph at seed time; pipeline archetypes + deterministic case mapping + per-issue projections (`docs/FRONTEND.md` § Backend artifact wiring) |
+| `report_layer.jac` | LLM briefing layer for `issue_report`: summarize-only prompt over the workup payload, no-new-facts validation, deterministic fallback, `out/reports/` cache (`docs/FRONTEND.md` § issue_report payload) |
+| `outreach_layer.jac` | The packet for `outreach_email`: per-association staged email drafts (bilingual for zh orgs), initial-signal citation, same validator stack + no-dates-without-verified-deadline rule, `out/drafts/` staging — never sends (`docs/FRONTEND.md` § outreach_email payload) |
 | `jac.toml` | Project config: fullstack kind, npm deps, serve port |
 | `requirements.txt` / `requirements-dev.txt` | Python deps for `ingest/` and tests (`jaclang` installed separately — see `README.md` §1) |
 | `README.md` | Setup, pipeline CLI, tests, demo, honest gaps, jaclang quirks |
-| `OVERVIEW.md` | Product overview: the two cases, the insight, pipeline, architecture |
-| `PRODUCT.md` | Product schema: users, positioning, capabilities, constraints |
-| `DESIGNDOC.md` | Full product/architecture vision document |
-| `DESIGN.md` | Design system authority: type, color, spacing tokens |
-| `FRONTEND.md` | UI routes, walker endpoints, payload shapes, file map |
-| `p1ingestion.md` | P1 ingestion spec the pipeline implements (incl. no-fabrication rules §0) |
+| `DEVPOST.md` | The hackathon submission writeup |
 | `AGENTS.md` / `CLAUDE.md` | Repository instructions for agents: invariants, scope, boundaries |
-| `IMPLEMENTATION_STATUS.md` | Running log of milestones, verification, and what remains |
+
+## `docs/` — product, design, and build-history reference
+
+| File | Role |
+|---|---|
+| `docs/OVERVIEW.md` | Product overview: the two cases, the insight, pipeline, architecture |
+| `docs/PRODUCT.md` | Product schema: users, positioning, capabilities, constraints |
+| `docs/DESIGNDOC.md` | Full product/architecture vision document |
+| `docs/DESIGN.md` | Design system authority: type, color, spacing tokens |
+| `docs/FRONTEND.md` | UI routes, walker endpoints, payload shapes, file map |
+| `docs/p1ingestion.md` | P1 ingestion spec the pipeline implements (incl. no-fabrication rules §0) |
+| `docs/IMPLEMENTATION_STATUS.md` | Running log of milestones, verification, and what remains |
+| `docs/PACKAGE_INDEX.md` | This file |
+| `docs/FIXTURE_GRAPH_MAPPING.md`, `docs/CIVIC_WALKER_INTERFACE.md`, `docs/TARGETING_MODULE.md`, `docs/SAMBA_ADAPTER.md` | Module contracts — see the `docs/` section further down |
 
 ## `schemas/` — the Jac graph (curated backbone + reasoning walkers)
 
@@ -64,9 +78,9 @@ See [`FRONTEND.md`](FRONTEND.md) for routes, endpoints, and payloads.
 | `pages/layout.jac` | Shared shell + pill nav |
 | `pages/index.jac` | Landing (hero, cases, how-it-works, pressing-now feed) |
 | `pages/actions.jac` | Map + verdict-first issue panel |
-| `pages/issue/[id].jac` | Full decision-routing page (verdict → route → validity → record → steps → background) |
+| `pages/issue/[id].jac` | Decision-routing page: briefing → verdict → the record → next steps → the packet (outreach drafts) → collapsed background/sources |
 | `pages/notes.jac` | Community notes wall |
-| `components/*.cl.jac` | `Sections` (shared blocks incl. pipeline-record components), `IssueMap`, `HeroMap`, `CaseStudies`, `ProblemCharts` |
+| `components/*.cl.jac` | `Sections` (shared blocks incl. pipeline-record, briefing, and packet components), `IssueMap`, `HeroMap`, `CaseStudies`, `ProblemCharts` |
 | `assets/*.css` | `quorum.css` (tokens, per `DESIGN.md`), `landing.css`, `actions.css` |
 
 ## Data and generated artifacts
@@ -75,12 +89,13 @@ See [`FRONTEND.md`](FRONTEND.md) for routes, endpoints, and payloads.
 |---|---|
 | `out/fixture.json` | **THE CONTRACT** — the pipeline's one interface, schema-validated by `tests/test_contract.py` |
 | `out/fixture.jac` | Generated Jac statements from the fixture (handoff artifact) |
-| `out/drafts/` | Reserved for staged outreach drafts (nothing writes it yet) |
+| `out/reports/<slug>.json` | Cached AI-generated issue briefings (report layer artifact; checked in for the demo slugs, regenerate via `issue_report` with `regenerate: true`) |
+| `out/drafts/<slug>/<org>.json` | Staged outreach email drafts from the outreach layer (gitignored by design: drafts are reviewed and sent by a human, never committed, never sent by Quorum) |
 | `cache/` | Request-keyed fetch cache + `_credit_ledger.json` (offline mode; gitignored) |
 | `.jac/` | Generated: client compile output, Vite build, persistent graph DBs (delete `data/*.db` to force a fresh seed) |
 | `.lavish/` | Static HTML mockups, reference only — not served |
 
-## `docs/` — module contracts
+## `docs/` — module contracts (the rest of `docs/`, not covered above)
 
 | File | Contract for |
 |---|---|

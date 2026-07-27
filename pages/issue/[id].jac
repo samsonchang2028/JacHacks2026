@@ -1,19 +1,26 @@
 """Decision-routing page for one issue.
 
-Order from the actions-detail mockup: verdict → route → validity → next steps
-→ collapsed background / sources. Graph traversal is demoted under Sources.
+Order: briefing → verdict → the record → next steps → collapsed background /
+sources. The route and validity bands were cut for length -- their content
+still reaches the reader through the briefing card (which summarizes route,
+counts, and not-counts), the actions panel's decides/channel/deadline rows,
+and the sources table. Graph traversal is demoted under Sources.
 """
 
 cl import from "@jac/runtime" { Link, useParams }
 cl import from ...components.Sections {
-    VerdictBlock, RoutePath, ValidityGrid, NextSteps,
+    VerdictBlock, NextSteps,
     BackgroundContext, SourcesTable, TraversalPanel,
-    RecordWall, SignalList, OutreachList, PipelineRecord
+    RecordWall, SignalList, OutreachList, PipelineRecord,
+    BriefingCard, BriefingPending, PacketBand
 }
 
 cl {
     def:pub page -> JsxElement {
-        has detail: any = None;
+        has detail: any = None,
+            brief: any = None,
+            drafts: list = [],
+            drafting: str = "";
 
         params = useParams();
         slug = params.id;
@@ -21,7 +28,24 @@ cl {
         async can with entry {
             root spawn seed_graph();
             picked = root spawn issue_detail(slug=slug);
+            # Set the workup first so the page renders; the briefing follows
+            # (instant when out/reports/<slug>.json is cached, a live LLM
+            # run when it is not).
             detail = picked.reports[0];
+            briefed = root spawn issue_report(slug=slug);
+            brief = briefed.reports[0];
+        }
+
+        # One outreach draft at a time: instant when staged on disk, a live
+        # LLM run (tens of seconds) when not. Nothing is ever sent.
+        async def make_draft(org_name: str) -> None {
+            if drafting != "" {
+                return;
+            }
+            drafting = org_name;
+            got = root spawn outreach_email(slug=slug, org_name=org_name);
+            drafts = drafts + [got.reports[0]];
+            drafting = "";
         }
 
         if not detail {
@@ -65,27 +89,9 @@ cl {
                     <h1 className="actions-h1">{detail["title"]}</h1>
                 </div>
 
+                {<BriefingCard brief={brief}/> if brief else <BriefingPending/>}
+
                 <VerdictBlock detail={detail}/>
-
-                <section className="band">
-                    <p className="eyebrow plain">The route</p>
-                    <h2>Where your input has to arrive</h2>
-                    <p className="band-lead">
-                        One hop at a time, as retrieved from the record, not a network diagram.
-                        Each step names the next thing that must be true for your objection to be counted.
-                    </p>
-                    <RoutePath route={detail["route"]}/>
-                </section>
-
-                <section className="band">
-                    <p className="eyebrow plain">Validity</p>
-                    <h2>What counts as input here</h2>
-                    <p className="band-lead">
-                        The channel has rules. Effort that does not meet them is not counted,
-                        however much of it there is.
-                    </p>
-                    <ValidityGrid counts={detail["counts"]} not_counts={detail["not_counts"]}/>
-                </section>
 
                 {
                     <section className="band">
@@ -104,6 +110,13 @@ cl {
                 }
 
                 <NextSteps actions={detail["actions"]} correction_h={correction_h}/>
+
+                <PacketBand
+                    packet_orgs={detail["packet_orgs"]}
+                    drafts={drafts}
+                    drafting={drafting}
+                    on_draft={make_draft}
+                />
 
                 <section className="band tight">
                     <p className="eyebrow plain">Background</p>

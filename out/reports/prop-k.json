@@ -1,0 +1,26 @@
+{
+  "found": true,
+  "available": true,
+  "slug": "prop-k",
+  "title": "Proposition K -- Great Highway",
+  "origin": "llm",
+  "model": "claude haiku (CLI, headless)",
+  "ai_generated": true,
+  "generated_at": "2026-07-26T19:19:30",
+  "verdict_line": "Proposition K passed citywide but divided westside neighborhoods directly affected.",
+  "stakes": "Whether to close the Great Highway to cars is decided by citywide voters, but impacts concentrate in Sunset and Richmond.",
+  "record_gap": "Community testimony spans 12 statements and 1,711 forum comments. Official decisions include passage of Prop K, loss of CEQA challenge, and pending appeal.",
+  "do_next": [
+    "Retarget persuasion to eastside districts; westside voters have already decided.",
+    "Lead with local traffic impact data in eastside voter outreach.",
+    "Check FPPC and SF Ethics disclosure requirements for ballot measure spending."
+  ],
+  "summarized_from": {
+    "statements": 12,
+    "threads": 7,
+    "actions": 3,
+    "organizations": 7
+  },
+  "validation_errors": [],
+  "legal_reviewed": false
+}

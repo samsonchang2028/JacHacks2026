@@ -1,0 +1,26 @@
+{
+  "found": true,
+  "available": true,
+  "slug": "portsmouth-square",
+  "title": "Portsmouth Square renovation",
+  "origin": "llm",
+  "model": "claude haiku (CLI, headless)",
+  "ai_generated": true,
+  "generated_at": "2026-07-26T19:20:26",
+  "verdict_line": "Bridge removal opposition exists but hasn't reached the official record the decision-maker actually counts.",
+  "stakes": "Whether the historic pedestrian bridge at Portsmouth Square gets removed as part of a $73M renovation. The SF Recreation and Park Commission decides; the District 3 supervisor's office fields constituent input.",
+  "record_gap": "Organized opposition exists: 56 forum comments, 10 testimony speakers, and in-language organizing by CCBA and merchants. District 3 Supervisor reports receiving no such communication in the official record.",
+  "do_next": [
+    "Submit written comment to Rec & Park Commission Secretary; one distinct submitter, in their own words.",
+    "Register CCBA speakers for general public comment; bring in-language speakers to testify on the record.",
+    "Ask District 3 supervisor's office to formally log the bridge-removal opposition in the official record."
+  ],
+  "summarized_from": {
+    "statements": 10,
+    "threads": 4,
+    "actions": 3,
+    "organizations": 6
+  },
+  "validation_errors": [],
+  "legal_reviewed": false
+}

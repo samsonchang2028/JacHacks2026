@@ -15,6 +15,12 @@ import from fixture_bridge {
     attach_fixture, testimony_for, signals_for, outreach_for,
     pipeline_status, record_count
 }
+# The briefing layer: LLM-summarized (validated, deterministic-fallback)
+# compact report over the same payload the detail page renders.
+import from report_layer { issue_briefing, list_field, text_field }
+# The packet: staged outreach email drafts, one per listed association.
+# Drafts only -- nothing in this codebase sends mail (docs/p1ingestion.md §0).
+import from outreach_layer { outreach_draft }
 
 # ================================================================= schema
 
@@ -373,13 +379,277 @@ walker:pub find_issues {
     }
 }
 
-walker:pub issue_detail {
-    """Everything the side panel and detail page render.
+"""Everything the side panel and detail page render, as one payload.
 
-    Also reports `path` -- the nodes this walker actually visited -- which is
-    what the graph traversal panel draws. The divergence answer lives in no
-    single node: it is the comparison of two different terminal GeoZones.
-    """
+One traversal, one source of truth: shared by `issue_detail` (page/panel)
+and `issue_report` (the LLM briefing layer). Also carries `path` -- the
+nodes actually visited -- which the graph traversal panel draws. The
+divergence answer lives in no single node: it is the comparison of two
+different terminal GeoZones.
+"""
+def issue_payload(issue: Issue) -> dict {
+    # Annotated `list` on purpose: the checker otherwise pins the element
+    # type to the first literal's shape and rejects every later hop.
+    path: list = [];
+    path.append({"kind": "Issue", "label": issue.title, "via": "root"});
+
+    # --- decision zone: Issue -> DecisionBody -> accountable_to -> GeoZone
+    body = None;
+    decision_zone = None;
+    channel = None;
+    deadline = None;
+    bodies = [issue->:decided_by:->][?:DecisionBody];
+    if len(bodies) > 0 {
+        body = bodies[0];
+        path.append({"kind": "DecisionBody", "label": body.name, "via": "decided_by"});
+
+        zones = [body->:accountable_to:->][?:GeoZone];
+        if len(zones) > 0 {
+            decision_zone = zones[0];
+            path.append({"kind": "GeoZone", "label": decision_zone.name, "via": "accountable_to"});
+        }
+
+        channels = [body->:accepts_input_via:->][?:CommentChannel];
+        if len(channels) > 0 {
+            channel = channels[0];
+            path.append({"kind": "CommentChannel", "label": channel.name, "via": "accepts_input_via"});
+
+            dues = [channel->:has_deadline:->][?:Deadline];
+            if len(dues) > 0 {
+                deadline = dues[0];
+                path.append({"kind": "Deadline", "label": deadline.label, "via": "has_deadline"});
+            }
+        }
+    }
+
+    # --- impact zone: Issue -> impacts -> GeoZone
+    impact_zone = None;
+    izones = [issue->:impacts:->][?:GeoZone];
+    if len(izones) > 0 {
+        impact_zone = izones[0];
+        path.append({"kind": "GeoZone", "label": impact_zone.name, "via": "impacts"});
+    }
+
+    # --- zones + divergence ------------------------------------------
+    # The divergence answer lives in no single node: it is either the
+    # comparison of two terminal GeoZones, or an explicit channel failure
+    # seeded on the Issue when the zones already match.
+    zones_match = False;
+    if decision_zone is not None and impact_zone is not None {
+        zones_match = decision_zone.name == impact_zone.name;
+    }
+
+    kind = issue.failure_kind;
+    if kind == "" and decision_zone is not None and impact_zone is not None {
+        if not zones_match {
+            kind = "electorate" if decision_zone.kind == "citywide" else "channel";
+        }
+    }
+
+    divergence = None;
+    if kind != "" {
+        divergence = {
+            "impact": impact_zone.name if impact_zone is not None else "",
+            "decision": decision_zone.name if decision_zone is not None else "",
+            "kind": kind,
+            "match": zones_match,
+            "headline": issue.verdict_headline,
+            "why": issue.verdict_why,
+            "correction_h": issue.correction_h,
+            "correction_p": issue.correction_p
+        };
+    }
+
+    # Human-readable route hops for the decision-routing page. Separate
+    # from `path`, which also carries impact / precedent hops for the
+    # engineer-facing traversal.
+    route: list = [];
+    route.append({
+        "role": "The issue",
+        "name": issue.title,
+        "note": issue.district,
+        "edge": "root",
+        "deadline": False,
+        "unverified": False
+    });
+    if body is not None {
+        route.append({
+            "role": "Is decided by",
+            "name": body.name,
+            "note": body.accountable_note,
+            "edge": "decided_by",
+            "deadline": False,
+            "unverified": body.source_url == ""
+        });
+    }
+    if decision_zone is not None {
+        route.append({
+            "role": "Which answers to",
+            "name": decision_zone.name,
+            "note": "Not the impact zone." if not zones_match else "The same zone the impact lands on.",
+            "edge": "accountable_to",
+            "deadline": False,
+            "unverified": False
+        });
+    }
+    if channel is not None {
+        route.append({
+            "role": "Accepts input via",
+            "name": channel.name,
+            "note": channel.format,
+            "edge": "accepts_input_via",
+            "deadline": False,
+            "unverified": channel.source_url == ""
+        });
+    }
+    if deadline is not None {
+        due_missing = deadline.source_url == "" or deadline.due == "";
+        route.append({
+            "role": "By",
+            "name": deadline.label,
+            "note": "No verified source found. Quorum will not guess." if due_missing else deadline.due,
+            "edge": "has_deadline",
+            "deadline": True,
+            "unverified": due_missing
+        });
+    }
+
+    resources: list = [];
+    if body is not None {
+        resources.append({
+            "label": "Who decides", "value": body.name,
+            "source_url": body.source_url, "retrieved_at": body.retrieved_at
+        });
+        if body.accountable_note != "" {
+            resources.append({
+                "label": "Accountable to", "value": body.accountable_note,
+                "source_url": body.source_url, "retrieved_at": body.retrieved_at
+            });
+        }
+    }
+    if channel is not None {
+        resources.append({
+            "label": "Channel that counts",
+            "value": channel.name + " -- " + channel.format,
+            "source_url": channel.source_url, "retrieved_at": channel.retrieved_at
+        });
+    }
+    if deadline is not None {
+        resources.append({
+            "label": deadline.label,
+            "value": deadline.due if deadline.due != "" else "No record retrieved",
+            "source_url": deadline.source_url, "retrieved_at": deadline.retrieved_at
+        });
+    }
+
+    # Sources table rows -- same facts as resources, plus an explicit
+    # verified flag so the UI never has to infer it.
+    sources: list = [];
+    for r in resources {
+        sources.append({
+            "fact": r["label"] + ": " + r["value"],
+            "source": r["source_url"] if r["source_url"] != "" else "Not found",
+            "retrieved": r["retrieved_at"] if r["retrieved_at"] != "" else "Not found",
+            "verified": r["source_url"] != ""
+        });
+    }
+
+    orgs: list = [];
+    for o in [issue->:organized_by:->][?:Organization] {
+        orgs.append({
+            "name": o.name, "initials": o.initials,
+            "role": o.role, "language": o.language,
+            "contact": o.contact, "inside_process": o.inside_process
+        });
+    }
+
+    precedents: list = [];
+    for p in [issue->:analogous_to:->][?:PrecedentCase] {
+        precedents.append({
+            "title": p.title, "summary": p.summary,
+            "channel_used": p.channel_used, "outcome": p.outcome,
+            "source_url": p.source_url, "retrieved_at": p.retrieved_at
+        });
+    }
+    if len(precedents) > 0 {
+        path.append({"kind": "PrecedentCase", "label": str(len(precedents)) + " matched", "via": "analogous_to"});
+    }
+
+    # Edges come back in insertion order and the seed writes them ranked,
+    # so no sort is needed here.
+    actions: list = [];
+    for s in [issue->:suggests:->][?:ActionStep] {
+        actions.append({"rank": s.rank, "what": s.what, "how": s.how});
+    }
+
+    # --- pipeline record (out/fixture.json via the fixture bridge) ----
+    # Retrieved statements, forum signal, and reachable orgs mapped to
+    # this issue; plus the artifact-wide status the provenance panel
+    # renders. All of it is displayed as record, never as support.
+    testimony = testimony_for(issue);
+    signals = signals_for(issue);
+    outreach = outreach_for(issue);
+    pipeline = pipeline_status();
+
+    # The associations the outreach packet may target. Org-level rule
+    # (docs/p1ingestion.md §0): fixture-backed organizations only -- enriched
+    # organizer cards plus pipeline outreach orgs. Individuals and
+    # campaign entities never appear here.
+    packet_orgs: list = [];
+    for po in [issue->:organized_by:->][?:Organization] {
+        if po.community != "" or po.inside_process != "" {
+            packet_orgs.append({
+                "name": po.name,
+                "community": po.community,
+                "language": "zh" if "中文" in po.language else "en",
+                "contact": po.contact
+            });
+        }
+    }
+    for po in outreach {
+        packet_orgs.append({
+            "name": po["name"],
+            "community": po["community"],
+            "language": po["language"],
+            "contact": po["contact"]
+        });
+    }
+    if len(testimony) > 0 {
+        path.append({"kind": "Testimony", "label": str(len(testimony)) + " statements on the record", "via": "has_testimony"});
+    }
+    if len(signals) > 0 {
+        path.append({"kind": "Incident", "label": str(len(signals)) + " community threads", "via": "has_signal"});
+    }
+
+    return {
+        "found": True,
+        "slug": issue.slug, "title": issue.title, "district": issue.district,
+        "tier": issue.tier, "short": issue.short,
+        "problem": issue.problem, "srcs": issue.srcs,
+        "divergence": divergence,
+        "zones_match": zones_match,
+        "impact_zone": impact_zone.name if impact_zone is not None else "",
+        "decision_zone": decision_zone.name if decision_zone is not None else "",
+        "organizers": orgs,
+        "resources": resources,
+        "sources": sources,
+        "route": route,
+        "counts": issue.counts,
+        "not_counts": issue.not_counts,
+        "precedents": precedents,
+        "actions": actions,
+        "testimony": testimony,
+        "signals": signals,
+        "outreach": outreach,
+        "packet_orgs": packet_orgs,
+        "pipeline": pipeline,
+        "path": path
+    };
+}
+
+
+walker:pub issue_detail {
+    """The full workup for one issue, or {found: False}."""
 
     has slug: str;
 
@@ -389,239 +659,88 @@ walker:pub issue_detail {
             report {"found": False, "slug": self.slug};
             disengage;
         }
+        report issue_payload(matches[0]);
+    }
+}
+
+
+walker:pub issue_report {
+    """Compact briefing for one issue: the LLM layer over the graph payload.
+
+    Cache-first from out/reports/<slug>.json; `regenerate` forces a fresh
+    LLM run. The summary is generated and labeled as such -- every number it
+    may contain is validated against the retrieved payload, and any
+    validation failure falls back to a deterministic extract (same pattern
+    as RecommendRecourse: the endpoint never fails because a model did).
+    """
+
+    has slug: str;
+    has regenerate: bool = False;
+
+    can brief with Root entry {
+        matches = [i for i in [-->[?:Issue]] if i.slug == self.slug];
+        if len(matches) == 0 {
+            report {"found": False, "slug": self.slug};
+            disengage;
+        }
         issue = matches[0];
-        # Annotated `list` on purpose: the checker otherwise pins the element
-        # type to the first literal's shape and rejects every later hop.
-        path: list = [];
-        path.append({"kind": "Issue", "label": issue.title, "via": "root"});
-
-        # --- decision zone: Issue -> DecisionBody -> accountable_to -> GeoZone
-        body = None;
-        decision_zone = None;
-        channel = None;
-        deadline = None;
-        bodies = [issue->:decided_by:->][?:DecisionBody];
-        if len(bodies) > 0 {
-            body = bodies[0];
-            path.append({"kind": "DecisionBody", "label": body.name, "via": "decided_by"});
-
-            zones = [body->:accountable_to:->][?:GeoZone];
-            if len(zones) > 0 {
-                decision_zone = zones[0];
-                path.append({"kind": "GeoZone", "label": decision_zone.name, "via": "accountable_to"});
-            }
-
-            channels = [body->:accepts_input_via:->][?:CommentChannel];
-            if len(channels) > 0 {
-                channel = channels[0];
-                path.append({"kind": "CommentChannel", "label": channel.name, "via": "accepts_input_via"});
-
-                dues = [channel->:has_deadline:->][?:Deadline];
-                if len(dues) > 0 {
-                    deadline = dues[0];
-                    path.append({"kind": "Deadline", "label": deadline.label, "via": "has_deadline"});
-                }
-            }
+        if issue.tier != "full" {
+            # No procedural record -> nothing to brief; do not spend an
+            # LLM call summarizing a pin.
+            report {"found": True, "available": False, "slug": issue.slug};
+            disengage;
         }
+        report issue_briefing(issue_payload(issue), self.regenerate);
+    }
+}
 
-        # --- impact zone: Issue -> impacts -> GeoZone
-        impact_zone = None;
-        izones = [issue->:impacts:->][?:GeoZone];
-        if len(izones) > 0 {
-            impact_zone = izones[0];
-            path.append({"kind": "GeoZone", "label": impact_zone.name, "via": "impacts"});
+
+walker:pub outreach_email {
+    """Staged outreach draft for one listed association -- the packet.
+
+    Cache-first from out/drafts/<slug>/<org>.json (gitignored: drafts are
+    staged for human review, never committed and never sent). The draft
+    cites the initial signal already collected, asks the org to file its
+    own view through the channel that counts, and is validated with the
+    same no-new-facts stack as the briefing -- plus a no-dates rule when
+    no verified deadline exists. Failures fall back to a deterministic
+    template of retrieved text.
+    """
+
+    has slug: str;
+    has org_name: str;
+    has regenerate: bool = False;
+
+    can draft with Root entry {
+        matches = [i for i in [-->[?:Issue]] if i.slug == self.slug];
+        if len(matches) == 0 {
+            report {"found": False, "slug": self.slug};
+            disengage;
         }
-
-        # --- zones + divergence ------------------------------------------
-        # The divergence answer lives in no single node: it is either the
-        # comparison of two terminal GeoZones, or an explicit channel failure
-        # seeded on the Issue when the zones already match.
-        zones_match = False;
-        if decision_zone is not None and impact_zone is not None {
-            zones_match = decision_zone.name == impact_zone.name;
+        issue = matches[0];
+        if issue.tier != "full" {
+            report {"found": True, "available": False, "slug": issue.slug};
+            disengage;
         }
-
-        kind = issue.failure_kind;
-        if kind == "" and decision_zone is not None and impact_zone is not None {
-            if not zones_match {
-                kind = "electorate" if decision_zone.kind == "citywide" else "channel";
+        payload = issue_payload(issue);
+        org: dict = {};
+        for candidate in list_field(payload, "packet_orgs") {
+            if isinstance(candidate, dict)
+                and text_field(candidate, "name") == self.org_name {
+                org = candidate;
             }
         }
-
-        divergence = None;
-        if kind != "" {
-            divergence = {
-                "impact": impact_zone.name if impact_zone is not None else "",
-                "decision": decision_zone.name if decision_zone is not None else "",
-                "kind": kind,
-                "match": zones_match,
-                "headline": issue.verdict_headline,
-                "why": issue.verdict_why,
-                "correction_h": issue.correction_h,
-                "correction_p": issue.correction_p
+        if len(org) == 0 {
+            # Not fixture-backed (an individual, a campaign entity, or an
+            # unknown name): the org-level rule says no draft.
+            report {
+                "found": True, "available": False, "slug": issue.slug,
+                "org_name": self.org_name,
+                "reason": "Drafts are generated only for fixture-backed organizations."
             };
+            disengage;
         }
-
-        # Human-readable route hops for the decision-routing page. Separate
-        # from `path`, which also carries impact / precedent hops for the
-        # engineer-facing traversal.
-        route: list = [];
-        route.append({
-            "role": "The issue",
-            "name": issue.title,
-            "note": issue.district,
-            "edge": "root",
-            "deadline": False,
-            "unverified": False
-        });
-        if body is not None {
-            route.append({
-                "role": "Is decided by",
-                "name": body.name,
-                "note": body.accountable_note,
-                "edge": "decided_by",
-                "deadline": False,
-                "unverified": body.source_url == ""
-            });
-        }
-        if decision_zone is not None {
-            route.append({
-                "role": "Which answers to",
-                "name": decision_zone.name,
-                "note": "Not the impact zone." if not zones_match else "The same zone the impact lands on.",
-                "edge": "accountable_to",
-                "deadline": False,
-                "unverified": False
-            });
-        }
-        if channel is not None {
-            route.append({
-                "role": "Accepts input via",
-                "name": channel.name,
-                "note": channel.format,
-                "edge": "accepts_input_via",
-                "deadline": False,
-                "unverified": channel.source_url == ""
-            });
-        }
-        if deadline is not None {
-            due_missing = deadline.source_url == "" or deadline.due == "";
-            route.append({
-                "role": "By",
-                "name": deadline.label,
-                "note": "No verified source found. Quorum will not guess." if due_missing else deadline.due,
-                "edge": "has_deadline",
-                "deadline": True,
-                "unverified": due_missing
-            });
-        }
-
-        resources: list = [];
-        if body is not None {
-            resources.append({
-                "label": "Who decides", "value": body.name,
-                "source_url": body.source_url, "retrieved_at": body.retrieved_at
-            });
-            if body.accountable_note != "" {
-                resources.append({
-                    "label": "Accountable to", "value": body.accountable_note,
-                    "source_url": body.source_url, "retrieved_at": body.retrieved_at
-                });
-            }
-        }
-        if channel is not None {
-            resources.append({
-                "label": "Channel that counts",
-                "value": channel.name + " -- " + channel.format,
-                "source_url": channel.source_url, "retrieved_at": channel.retrieved_at
-            });
-        }
-        if deadline is not None {
-            resources.append({
-                "label": deadline.label,
-                "value": deadline.due if deadline.due != "" else "No record retrieved",
-                "source_url": deadline.source_url, "retrieved_at": deadline.retrieved_at
-            });
-        }
-
-        # Sources table rows -- same facts as resources, plus an explicit
-        # verified flag so the UI never has to infer it.
-        sources: list = [];
-        for r in resources {
-            sources.append({
-                "fact": r["label"] + ": " + r["value"],
-                "source": r["source_url"] if r["source_url"] != "" else "Not found",
-                "retrieved": r["retrieved_at"] if r["retrieved_at"] != "" else "Not found",
-                "verified": r["source_url"] != ""
-            });
-        }
-
-        orgs: list = [];
-        for o in [issue->:organized_by:->][?:Organization] {
-            orgs.append({
-                "name": o.name, "initials": o.initials,
-                "role": o.role, "language": o.language,
-                "contact": o.contact, "inside_process": o.inside_process
-            });
-        }
-
-        precedents: list = [];
-        for p in [issue->:analogous_to:->][?:PrecedentCase] {
-            precedents.append({
-                "title": p.title, "summary": p.summary,
-                "channel_used": p.channel_used, "outcome": p.outcome,
-                "source_url": p.source_url, "retrieved_at": p.retrieved_at
-            });
-        }
-        if len(precedents) > 0 {
-            path.append({"kind": "PrecedentCase", "label": str(len(precedents)) + " matched", "via": "analogous_to"});
-        }
-
-        # Edges come back in insertion order and the seed writes them ranked,
-        # so no sort is needed here.
-        actions: list = [];
-        for s in [issue->:suggests:->][?:ActionStep] {
-            actions.append({"rank": s.rank, "what": s.what, "how": s.how});
-        }
-
-        # --- pipeline record (out/fixture.json via the fixture bridge) ----
-        # Retrieved statements, forum signal, and reachable orgs mapped to
-        # this issue; plus the artifact-wide status the provenance panel
-        # renders. All of it is displayed as record, never as support.
-        testimony = testimony_for(issue);
-        signals = signals_for(issue);
-        outreach = outreach_for(issue);
-        pipeline = pipeline_status();
-        if len(testimony) > 0 {
-            path.append({"kind": "Testimony", "label": str(len(testimony)) + " statements on the record", "via": "has_testimony"});
-        }
-        if len(signals) > 0 {
-            path.append({"kind": "Incident", "label": str(len(signals)) + " community threads", "via": "has_signal"});
-        }
-
-        report {
-            "found": True,
-            "slug": issue.slug, "title": issue.title, "district": issue.district,
-            "tier": issue.tier, "short": issue.short,
-            "problem": issue.problem, "srcs": issue.srcs,
-            "divergence": divergence,
-            "zones_match": zones_match,
-            "impact_zone": impact_zone.name if impact_zone is not None else "",
-            "decision_zone": decision_zone.name if decision_zone is not None else "",
-            "organizers": orgs,
-            "resources": resources,
-            "sources": sources,
-            "route": route,
-            "counts": issue.counts,
-            "not_counts": issue.not_counts,
-            "precedents": precedents,
-            "actions": actions,
-            "testimony": testimony,
-            "signals": signals,
-            "outreach": outreach,
-            "pipeline": pipeline,
-            "path": path
-        };
+        report outreach_draft(payload, org, self.regenerate);
     }
 }
 
