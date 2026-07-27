@@ -1,0 +1,631 @@
+/* One central font across the whole app -- the serif from the page titles. */
+:root {
+  --ink: #173f45;
+  --ink-soft: #4a5c5c;
+  --ink-faint: #8a7b6d;
+  --cream: #fff8ef;
+  --card: #fffcf7;
+  --line: #ebdfd2;
+  --coral: #de5b49;
+  --coral-deep: #b8402c;
+  --peach: #f6b08e;
+  --peach-deep: #e7c9b5;
+  --teal: #6fb9bd;
+  --teal-pale: #eaf5f1;
+  --shadow-warm: 0 10px 26px rgba(83, 55, 37, 0.09);
+
+  /* Type scale -- nine steps, nothing between them. See DESIGN.md. */
+  --t-display: clamp(46px, 7vw, 88px);
+  --t-h2: clamp(30px, 3.4vw, 44px);
+  --t-h3: 26px;
+  --t-h4: 21px;
+  --t-lead: 18px;
+  --t-body: 16px;
+  --t-small: 14px;
+  --t-fine: 12px;
+  --t-micro: 11px;
+
+  /* Georgia ships 400 and 700 only. Anything else is fake. */
+  --w-normal: 400;
+  --w-bold: 700;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+
+  color: #173f45;
+  background: #fff8ef;
+  font-family: Georgia, "Times New Roman", serif;
+  font-synthesis: none;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: #fff8ef;
+}
+
+/* The warm washes are the Quorum signature: peach and teal, fixed so they drift
+   under the content as the page scrolls rather than scrolling away with it. */
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 3% 6%, rgba(246, 176, 142, 0.34), transparent 34rem),
+    radial-gradient(circle at 97% 34%, rgba(139, 211, 215, 0.26), transparent 36rem),
+    radial-gradient(circle at 8% 72%, rgba(246, 176, 142, 0.22), transparent 32rem),
+    radial-gradient(circle at 92% 96%, rgba(139, 211, 215, 0.24), transparent 34rem),
+    #fff8ef;
+  background-attachment: fixed;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  width: min(1560px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 18px 40px 24px;
+}
+
+/* Un-boxed: content sits on the page rather than inside one big rounded card. */
+.app-panel {
+  min-height: 0;
+  padding: 0;
+}
+
+/* Pill navbar — pattern from the floating bar mock, Quorum tokens only. */
+.nav-wrap {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 26px;
+}
+
+.topbar {
+  position: relative;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  width: min(720px, 100%);
+  padding: 10px 14px 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: rgba(255, 252, 247, 0.94);
+  box-shadow: var(--shadow-warm);
+  backdrop-filter: blur(10px);
+}
+
+.brand {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--t-lead);
+  font-weight: var(--w-bold);
+}
+
+.brand-mark {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-sm);
+  background: linear-gradient(135deg, var(--coral), var(--peach));
+  box-shadow: 0 8px 18px rgba(222, 91, 73, 0.22);
+  transition: transform 0.2s ease;
+}
+
+.brand:hover .brand-mark {
+  transform: rotate(8deg) scale(1.04);
+}
+
+.brand-mark::before,
+.brand-mark::after {
+  position: absolute;
+  content: "";
+  border-radius: 50%;
+  background: var(--cream);
+}
+
+.brand-mark::before {
+  top: 7px;
+  left: 7px;
+  width: 11px;
+  height: 11px;
+}
+
+.brand-mark::after {
+  right: 7px;
+  bottom: 8px;
+  width: 7px;
+  height: 7px;
+}
+
+.nav-labels {
+  display: flex;
+  flex: 1 1 auto;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nav-link {
+  padding: 8px 14px;
+  border-radius: var(--r-pill);
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  font-weight: var(--w-bold);
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.nav-link:hover {
+  color: var(--ink);
+  background: var(--teal-pale);
+  transform: translateY(-1px);
+}
+
+.nav-link.active,
+.nav-link.active:hover {
+  color: var(--cream);
+  background: var(--ink);
+  transform: none;
+}
+
+.nav-burger {
+  display: none;
+  flex: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  cursor: pointer;
+}
+
+.nav-burger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  margin: 0 auto;
+  border-radius: var(--r-pill);
+  background: var(--ink);
+}
+
+.nav-sheet {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 88px 28px 40px;
+  background: rgba(255, 248, 239, 0.98);
+  animation: nav-sheet-in 0.28s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+
+.nav-sheet-close {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--r-pill);
+  color: var(--ink);
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.nav-sheet-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+}
+
+.nav-sheet-link {
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-size: var(--t-h4);
+  font-weight: var(--w-normal);
+}
+
+.nav-sheet-link.active {
+  color: var(--coral-deep);
+  font-weight: var(--w-bold);
+}
+
+@keyframes nav-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateX(12%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.actions-shell {
+  padding: 40px 0;
+}
+
+.section-title {
+  margin: 18px 0 12px;
+  color: #173f45;
+  font-size: var(--t-h2);
+  font-weight: var(--w-normal);
+  line-height: 1.05;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: var(--t-fine);
+  font-weight: var(--w-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.eyebrow::before {
+  width: 32px;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: #de5b49;
+  content: "";
+}
+
+h1 {
+  max-width: 760px;
+  margin: 22px 0 18px;
+  color: #173f45;
+  font-size: var(--t-display);
+  font-weight: var(--w-normal);
+  letter-spacing: 0;
+  line-height: 0.92;
+}
+
+.lead {
+  max-width: 720px;
+  margin: 0;
+  color: #435757;
+  font-size: var(--t-lead);
+  line-height: 1.6;
+}
+
+.case-button,
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 13px 18px;
+  border-radius: var(--r-pill);
+  font-weight: var(--w-bold);
+  cursor: pointer;
+}
+
+.case-button {
+  border: 1px solid #eaded2;
+  background: #fff;
+  box-shadow: 0 10px 22px rgba(83, 55, 37, 0.06);
+}
+
+.case-button.active {
+  border-color: transparent;
+  color: #fff;
+  background: #de5b49;
+  box-shadow: 0 15px 28px rgba(222, 91, 73, 0.24);
+}
+
+.text-button {
+  border: 0;
+  padding-left: 0;
+  padding-right: 0;
+  color: #435757;
+  background: transparent;
+  text-decoration: underline;
+  text-decoration-color: rgba(222, 91, 73, 0.45);
+  text-underline-offset: 0.22em;
+}
+
+.text-button:hover {
+  color: #173f45;
+  text-decoration-color: #de5b49;
+}
+
+.case-button:focus-visible,
+.text-button:focus-visible,
+.brand:focus-visible {
+  outline: 3px solid rgba(139, 211, 215, 0.8);
+  outline-offset: 3px;
+}
+
+/* Real Leaflet tiles behind the hero. Positron is near-grayscale, so a warm
+   filter pulls it into the cream palette instead of fighting it. */
+.hero-map {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* transparent so .map-base's gradient shows through if tiles fail to load */
+  background: transparent;
+}
+
+.hero-map .leaflet-tile-pane {
+  filter: sepia(0.34) saturate(0.78) hue-rotate(-8deg) brightness(1.04) contrast(0.94);
+}
+
+.hero-map .leaflet-control-attribution {
+  padding: 2px 7px;
+  border-radius: var(--r-pill) 0 0 0;
+  color: rgba(22, 63, 70, 0.55);
+  background: rgba(255, 248, 239, 0.82);
+  font-size: var(--t-micro);
+}
+
+.hero-map .leaflet-control-attribution a {
+  color: rgba(22, 63, 70, 0.7);
+}
+
+@keyframes impact-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(222, 91, 73, 0);
+  }
+  45% {
+    box-shadow: 0 0 0 12px rgba(222, 91, 73, 0.12);
+  }
+}
+
+/* ---- community notes -------------------------------------------------- */
+
+.notes-shell {
+  max-width: 760px;
+}
+
+.note-form {
+  display: grid;
+  gap: 18px;
+  margin: 28px 0 44px;
+  padding: 22px 24px;
+  border: 1px solid #eaded2;
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field label {
+  color: #173f45;
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+}
+
+.field .hint {
+  color: #7b8a8a;
+  font-size: var(--t-fine);
+  font-weight: var(--w-normal);
+}
+
+.field input,
+.field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #eaded2;
+  border-radius: var(--r-md);
+  color: #173f45;
+  background: #fff;
+  font: inherit;
+  font-size: var(--t-body);
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #9aa8a8;
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible {
+  border-color: transparent;
+  outline: 3px solid rgba(139, 211, 215, 0.8);
+  outline-offset: 1px;
+}
+
+.field textarea + .hint {
+  justify-self: end;
+}
+
+.note-error {
+  margin: 0;
+  color: #b8402c;
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+}
+
+.notes-heading {
+  margin: 0 0 16px;
+  color: #173f45;
+  font-size: var(--t-lead);
+  font-weight: var(--w-bold);
+}
+
+.note-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.note {
+  padding: 18px 20px;
+  border: 1px solid #eaded2;
+  border-radius: var(--r-lg);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.note-name {
+  margin-bottom: 6px;
+  color: #173f45;
+  font-size: var(--t-body);
+  font-weight: var(--w-bold);
+}
+
+.note-body {
+  margin: 0;
+  color: #435757;
+  font-size: var(--t-body);
+  line-height: 1.55;
+  /* notes are freeform text -- keep the author's line breaks */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 980px) {
+  .page-shell {
+    padding: 14px;
+  }
+
+  .page-shell {
+    padding: 14px 18px 20px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .value-points {
+    max-width: none;
+  }
+
+  .map-visual {
+    min-height: 500px;
+  }
+}
+
+@media (max-width: 820px) {
+  .nav-labels {
+    display: none;
+  }
+
+  .nav-burger {
+    display: flex;
+  }
+
+  .topbar {
+    width: 100%;
+    max-width: none;
+  }
+
+  .page-shell {
+    padding: 14px 18px 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  h1 {
+    font-size: var(--t-h2);
+  }
+
+  .hero-actions,
+  .value-points {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .hero-secondary {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .case-button {
+    width: 100%;
+  }
+
+  .map-visual {
+    min-height: 360px;
+  }
+
+  .decision-ring {
+    width: 66%;
+    height: 58%;
+  }
+
+  .impact-ring {
+    width: 31%;
+    height: 24%;
+  }
+
+  .floating-card {
+    right: 8%;
+    bottom: 4%;
+    left: 8%;
+    width: auto;
+  }
+
+  .note-form {
+    padding: 18px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -4,13 +4,20 @@ Making community objections countable. See [`DESIGNDOC.md`](DESIGNDOC.md) for th
 full product vision and [`p1ingestion.md`](p1ingestion.md) for the ingestion
 spec this pipeline implements.
 
-This repo has two halves:
+This repo has three halves:
 
 - **`schemas/`** — the Jac graph (schema, curated seed data, walkers). This is
-  what the demo actually runs.
+  what the demo graph actually runs.
 - **`ingest/`** — the Python pipeline that fetches real data (news, 311, org
   contacts, procedural comment channels) and turns it into the JSON contract
   (`out/fixture.json`) that feeds the graph.
+- **UI (`pages/`, `components/`, `assets/`, root `main.jac`)** — Jac fullstack
+  frontend. See [`FRONTEND.md`](FRONTEND.md) for routes, files, and walker
+  endpoints. Run with `jac start main.jac --dev` (app on :8000, API on :8001).
+
+Note: the UI currently ships with its own seeded demo graph in root `main.jac`.
+Wiring it to `schemas/` walkers is follow-up work; both trees coexist after
+the frontend integration.
 
 ---
 
